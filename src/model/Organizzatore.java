@@ -6,14 +6,14 @@ public class Organizzatore extends Utente {
         super(mail);
     }
 
-    // Crea un nuovo Hackathon (con valori di esempio per semplicità)
+    // Crea un nuovo Hackathon
     public Hackathon creaHackathon() {
         Hackathon hack = new Hackathon("Hackathon di " + this.getMail(), this, 100, 5);
         System.out.println("Hackathon \"" + hack.getTitolo() + "\" creato dall'organizzatore " + this.getMail());
         return hack;
     }
 
-    // Invita i giudici (versione senza parametri, come da UML)
+    // Invita i giudici
     public void invitaGiudici() {
         // In un caso reale si inviterebbero giudici specifici; qui stampa un messaggio di esempio
         System.out.println("Giudici invitati all'hackathon.");
