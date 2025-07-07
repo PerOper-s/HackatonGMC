@@ -1,22 +1,17 @@
 package gui;
-import controller.Controller;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.text.StyleContext;
 import java.awt.*;
+import java.util.Locale;
 
 public class Home {
     private JPanel panel1;
-
-    
-
-
-
-
-
-
-
-
-
-
+    private JLabel iconaUtente;
+    private JTextField emailTextField;
+    private JButton loginBtn;
+    private JLabel stringaHktn;
 
 
     {
@@ -35,8 +30,65 @@ public class Home {
      */
     private void $$$setupUI$$$() {
         panel1 = new JPanel();
-        panel1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        panel1.setBackground(new Color(-14803426));
+        panel1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setBackground(new Color(-15918294));
+        panel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30), "", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        loginBtn = new JButton();
+        loginBtn.setActionCommand("Button");
+        loginBtn.setAutoscrolls(false);
+        loginBtn.setBackground(new Color(-16708570));
+        loginBtn.setEnabled(false);
+        loginBtn.setFocusPainted(true);
+        loginBtn.setFocusable(true);
+        Font loginBtnFont = this.$$$getFont$$$(null, -1, -1, loginBtn.getFont());
+        if (loginBtnFont != null) loginBtn.setFont(loginBtnFont);
+        loginBtn.setForeground(new Color(-1));
+        loginBtn.setHideActionText(false);
+        loginBtn.setLabel("Login");
+        loginBtn.setOpaque(true);
+        loginBtn.setSelected(false);
+        loginBtn.setText("Login");
+        panel1.add(loginBtn, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        emailTextField = new JTextField();
+        emailTextField.setBackground(new Color(-16708570));
+        emailTextField.setEnabled(true);
+        emailTextField.setForeground(new Color(-11184811));
+        emailTextField.setSelectionColor(new Color(-1));
+        emailTextField.setText("Email");
+        panel1.add(emailTextField, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(200, 35), null, 0, false));
+        iconaUtente = new JLabel();
+        iconaUtente.setIcon(new ImageIcon(getClass().getResource("/icone/icons8-user-64.png")));
+        iconaUtente.setText("");
+        panel1.add(iconaUtente, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(50, 32), null, 0, false));
+        stringaHktn = new JLabel();
+        stringaHktn.setEnabled(true);
+        Font stringaHktnFont = this.$$$getFont$$$(null, Font.BOLD, 36, stringaHktn.getFont());
+        if (stringaHktnFont != null) stringaHktn.setFont(stringaHktnFont);
+        stringaHktn.setForeground(new Color(-1));
+        stringaHktn.setText("Hackaton");
+        panel1.add(stringaHktn, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    private Font $$$getFont$$$(String fontName, int style, int size, Font currentFont) {
+        if (currentFont == null) return null;
+        String resultName;
+        if (fontName == null) {
+            resultName = currentFont.getName();
+        } else {
+            Font testFont = new Font(fontName, Font.PLAIN, 10);
+            if (testFont.canDisplay('a') && testFont.canDisplay('1')) {
+                resultName = fontName;
+            } else {
+                resultName = currentFont.getName();
+            }
+        }
+        Font font = new Font(resultName, style >= 0 ? style : currentFont.getStyle(), size >= 0 ? size : currentFont.getSize());
+        boolean isMac = System.getProperty("os.name", "").toLowerCase(Locale.ENGLISH).startsWith("mac");
+        Font fontWithFallback = isMac ? new Font(font.getFamily(), font.getStyle(), font.getSize()) : new StyleContext().getFont(font.getFamily(), font.getStyle(), font.getSize());
+        return fontWithFallback instanceof FontUIResource ? fontWithFallback : new FontUIResource(fontWithFallback);
     }
 
     /**
