@@ -7,7 +7,7 @@
     </constraints>
     <properties>
       <background color="-15918294"/>
-      <minimumSize width="450" height="350"/>
+      <minimumSize width="450" height="300"/>
       <preferredSize width="450" height="350"/>
     </properties>
     <border type="empty" title="">

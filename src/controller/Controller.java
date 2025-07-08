@@ -164,6 +164,7 @@ public class Controller {
             frame2.pack();
             frame2.setLocationRelativeTo(null);
             frame2.setVisible(true);
+            frame2.setResizable(false);
 
             messaggioBenvenuto.setText("Utente, " + utente.getMail() + " ");
         }
@@ -176,6 +177,7 @@ public class Controller {
             frame2.pack();
             frame2.setLocationRelativeTo(null);
             frame2.setVisible(true);
+            frame2.setResizable(false);
 
             messaggioBenvenuto1.setText("Giudice, " + giudice.getMail() + " ");
         }
@@ -188,6 +190,7 @@ public class Controller {
             frame2.pack();
             frame2.setLocationRelativeTo(null);
             frame2.setVisible(true);
+            frame2.setResizable(false);
 
             messaggioBenvenuto2.setText("Organizzatore, " + organizzatore.getMail() + " ");
     }

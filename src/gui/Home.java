@@ -39,7 +39,7 @@ public class Home {
         panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(6, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setBackground(new Color(-15918294));
-        panel1.setMinimumSize(new Dimension(450, 350));
+        panel1.setMinimumSize(new Dimension(450, 300));
         panel1.setPreferredSize(new Dimension(450, 350));
         panel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30), "", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         stringaHktn = new JLabel();
