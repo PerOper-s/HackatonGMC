@@ -72,6 +72,7 @@ public class Controller {
                    messaggioErrore.setText("Seleziona un ruolo");
                    return;
                } else {
+                   messaggioErrore.setText("");
                    ruoloSelezionato = true;
                }
 
@@ -85,6 +86,7 @@ public class Controller {
                 }
 
                else {
+                     messaggioErrore.setText("");
                      emailValida = true;
                      return;
                 }
