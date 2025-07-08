@@ -1,4 +1,7 @@
 package gui;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.FontUIResource;
@@ -12,6 +15,10 @@ public class Home {
     private JTextField emailTextField;
     private JButton loginBtn;
     private JLabel stringaHktn;
+    private JRadioButton utenteRadioButton;
+    private JRadioButton organizzatoreRadioButton;
+    private JRadioButton giudiceRadioButton;
+    private JLabel messaggioErrore;
 
 
     {
@@ -30,14 +37,50 @@ public class Home {
      */
     private void $$$setupUI$$$() {
         panel1 = new JPanel();
-        panel1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(4, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setLayout(new GridLayoutManager(6, 3, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setBackground(new Color(-15918294));
+        panel1.setMinimumSize(new Dimension(450, 350));
+        panel1.setPreferredSize(new Dimension(450, 350));
         panel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30), "", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        stringaHktn = new JLabel();
+        stringaHktn.setEnabled(true);
+        Font stringaHktnFont = this.$$$getFont$$$(null, Font.BOLD, 36, stringaHktn.getFont());
+        if (stringaHktnFont != null) stringaHktn.setFont(stringaHktnFont);
+        stringaHktn.setForeground(new Color(-1));
+        stringaHktn.setText("Hackaton");
+        panel1.add(stringaHktn, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        iconaUtente = new JLabel();
+        iconaUtente.setIcon(new ImageIcon(getClass().getResource("/icone/icons8-user-64.png")));
+        iconaUtente.setText("");
+        panel1.add(iconaUtente, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(50, 32), null, 0, false));
+        emailTextField = new JTextField();
+        emailTextField.setBackground(new Color(-16708570));
+        emailTextField.setEnabled(true);
+        emailTextField.setForeground(new Color(-1));
+        emailTextField.setRequestFocusEnabled(true);
+        emailTextField.setSelectionColor(new Color(-1));
+        emailTextField.setText("Email");
+        panel1.add(emailTextField, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(200, 35), null, 0, false));
+        utenteRadioButton = new JRadioButton();
+        utenteRadioButton.setBackground(new Color(-16708570));
+        utenteRadioButton.setForeground(new Color(-1));
+        utenteRadioButton.setText("Utente");
+        panel1.add(utenteRadioButton, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        organizzatoreRadioButton = new JRadioButton();
+        organizzatoreRadioButton.setBackground(new Color(-16708570));
+        organizzatoreRadioButton.setForeground(new Color(-1));
+        organizzatoreRadioButton.setText("Organizzatore");
+        panel1.add(organizzatoreRadioButton, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        giudiceRadioButton = new JRadioButton();
+        giudiceRadioButton.setBackground(new Color(-16708570));
+        giudiceRadioButton.setForeground(new Color(-1));
+        giudiceRadioButton.setText("Giudice");
+        panel1.add(giudiceRadioButton, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         loginBtn = new JButton();
         loginBtn.setActionCommand("Button");
         loginBtn.setAutoscrolls(false);
         loginBtn.setBackground(new Color(-16708570));
-        loginBtn.setEnabled(false);
+        loginBtn.setEnabled(true);
         loginBtn.setFocusPainted(true);
         loginBtn.setFocusable(true);
         Font loginBtnFont = this.$$$getFont$$$(null, -1, -1, loginBtn.getFont());
@@ -48,25 +91,13 @@ public class Home {
         loginBtn.setOpaque(true);
         loginBtn.setSelected(false);
         loginBtn.setText("Login");
-        panel1.add(loginBtn, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_NORTH, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        emailTextField = new JTextField();
-        emailTextField.setBackground(new Color(-16708570));
-        emailTextField.setEnabled(true);
-        emailTextField.setForeground(new Color(-11184811));
-        emailTextField.setSelectionColor(new Color(-1));
-        emailTextField.setText("Email");
-        panel1.add(emailTextField, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(200, 35), null, 0, false));
-        iconaUtente = new JLabel();
-        iconaUtente.setIcon(new ImageIcon(getClass().getResource("/icone/icons8-user-64.png")));
-        iconaUtente.setText("");
-        panel1.add(iconaUtente, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(50, 32), null, 0, false));
-        stringaHktn = new JLabel();
-        stringaHktn.setEnabled(true);
-        Font stringaHktnFont = this.$$$getFont$$$(null, Font.BOLD, 36, stringaHktn.getFont());
-        if (stringaHktnFont != null) stringaHktn.setFont(stringaHktnFont);
-        stringaHktn.setForeground(new Color(-1));
-        stringaHktn.setText("Hackaton");
-        panel1.add(stringaHktn, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel1.add(loginBtn, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        messaggioErrore = new JLabel();
+        messaggioErrore.setAutoscrolls(false);
+        messaggioErrore.setBackground(new Color(-16708570));
+        messaggioErrore.setForeground(new Color(-4974080));
+        messaggioErrore.setText("");
+        panel1.add(messaggioErrore, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**
@@ -98,4 +129,32 @@ public class Home {
         return panel1;
     }
 
+
+    public JButton getLoginBtn() {
+        return loginBtn;
+    }
+
+    public JTextField getEmailTextField() {
+        return emailTextField;
+    }
+
+    public JPanel getPanel1() {
+        return panel1;
+    }
+
+    public JRadioButton getUtenteRadioButton() {
+        return utenteRadioButton;
+    }
+
+    public JRadioButton getGiudiceRadioButton() {
+        return giudiceRadioButton;
+    }
+
+    public JRadioButton getOrganizzatoreRadioButton() {
+        return organizzatoreRadioButton;
+    }
+
+    public JLabel getMessaggioErrore() {
+        return messaggioErrore;
+    }
 }

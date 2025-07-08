@@ -1,26 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="gui.Home">
-  <grid id="27dc6" binding="panel1" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="panel1" layout-manager="GridLayoutManager" row-count="6" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="339" height="415"/>
+      <xy x="20" y="20" width="500" height="508"/>
     </constraints>
     <properties>
       <background color="-15918294"/>
+      <minimumSize width="450" height="350"/>
+      <preferredSize width="450" height="350"/>
     </properties>
     <border type="empty" title="">
       <size top="30" left="30" bottom="30" right="30"/>
     </border>
     <children>
+      <component id="aac59" class="javax.swing.JLabel" binding="stringaHktn">
+        <constraints>
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <enabled value="true"/>
+          <font size="36" style="1"/>
+          <foreground color="-1"/>
+          <text value="Hackaton"/>
+        </properties>
+      </component>
+      <component id="35c5d" class="javax.swing.JLabel" binding="iconaUtente">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="50" height="32"/>
+          </grid>
+        </constraints>
+        <properties>
+          <icon value="icone/icons8-user-64.png"/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="67fc1" class="javax.swing.JTextField" binding="emailTextField" default-binding="true">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="200" height="35"/>
+          </grid>
+        </constraints>
+        <properties>
+          <background color="-16708570"/>
+          <enabled value="true"/>
+          <foreground color="-1"/>
+          <requestFocusEnabled value="true"/>
+          <selectionColor color="-1"/>
+          <text value="Email"/>
+        </properties>
+      </component>
+      <component id="f0f13" class="javax.swing.JRadioButton" binding="utenteRadioButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-16708570"/>
+          <foreground color="-1"/>
+          <text value="Utente"/>
+        </properties>
+      </component>
+      <component id="e2a30" class="javax.swing.JRadioButton" binding="organizzatoreRadioButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-16708570"/>
+          <foreground color="-1"/>
+          <text value="Organizzatore"/>
+        </properties>
+      </component>
+      <component id="e10fa" class="javax.swing.JRadioButton" binding="giudiceRadioButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <background color="-16708570"/>
+          <foreground color="-1"/>
+          <text value="Giudice"/>
+        </properties>
+      </component>
       <component id="429e9" class="javax.swing.JButton" binding="loginBtn">
         <constraints>
-          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <actionCommand value="Button"/>
           <autoscrolls value="false"/>
           <background color="-16708570"/>
-          <enabled value="false"/>
+          <enabled value="true"/>
           <focusPainted value="true"/>
           <focusable value="true"/>
           <font/>
@@ -32,40 +101,15 @@
           <text value="Login"/>
         </properties>
       </component>
-      <component id="67fc1" class="javax.swing.JTextField" binding="emailTextField" default-binding="true">
+      <component id="e859e" class="javax.swing.JLabel" binding="messaggioErrore">
         <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
-            <preferred-size width="200" height="35"/>
-          </grid>
+          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
+          <autoscrolls value="false"/>
           <background color="-16708570"/>
-          <enabled value="true"/>
-          <foreground color="-11184811"/>
-          <selectionColor color="-1"/>
-          <text value="Email"/>
-        </properties>
-      </component>
-      <component id="35c5d" class="javax.swing.JLabel" binding="iconaUtente">
-        <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
-            <preferred-size width="50" height="32"/>
-          </grid>
-        </constraints>
-        <properties>
-          <icon value="icone/icons8-user-64.png"/>
+          <foreground color="-4974080"/>
           <text value=""/>
-        </properties>
-      </component>
-      <component id="aac59" class="javax.swing.JLabel" binding="stringaHktn">
-        <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <enabled value="true"/>
-          <font size="36" style="1"/>
-          <foreground color="-1"/>
-          <text value="Hackaton"/>
         </properties>
       </component>
     </children>
