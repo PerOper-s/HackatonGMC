@@ -102,7 +102,7 @@ public class Home {
         loginBtn.setFocusable(true);
         Font loginBtnFont = this.$$$getFont$$$("Inter", -1, -1, loginBtn.getFont());
         if (loginBtnFont != null) loginBtn.setFont(loginBtnFont);
-        loginBtn.setForeground(new Color(-6708316));
+        loginBtn.setForeground(new Color(-1));
         loginBtn.setHideActionText(false);
         loginBtn.setLabel("Login");
         loginBtn.setOpaque(true);

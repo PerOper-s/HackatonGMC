@@ -21,7 +21,7 @@ public class Hackathon {
     private List<Problema> problemi;
 
     // Costruttore con i campi fondamentali
-    public Hackathon(String titolo, Organizzatore organizzatore, int maxPartecipanti, int maxGrandezzaTeam) {
+    public Hackathon(String titolo, String sede, Organizzatore organizzatore, int maxPartecipanti, int maxGrandezzaTeam) {
         this.titolo = titolo;
         this.organizzatore = organizzatore;
         this.maxPartecipanti = maxPartecipanti;
@@ -39,6 +39,21 @@ public class Hackathon {
         this.problemi = new ArrayList<>();
     }
 
+    public int getIscrizioniCount() {
+        return iscrizioni.size();
+    }
+
+    public String getOrganizzatore() {
+        return organizzatore.getMail();
+    }
+
+    public String getSede () {
+        return sede;
+    }
+
+    public int getMaxPartecipanti() {
+        return maxPartecipanti;
+    }
     public String getTitolo() {
         return titolo;
     }

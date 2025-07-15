@@ -107,7 +107,7 @@
           <focusPainted value="true"/>
           <focusable value="true"/>
           <font name="Inter"/>
-          <foreground color="-6708316"/>
+          <foreground color="-1"/>
           <hideActionText value="false"/>
           <label value="Login"/>
           <opaque value="true"/>

@@ -2,7 +2,10 @@ package controller;
 
 import gui.*;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+
 import model.*;
 public class Controller {
 
@@ -17,6 +20,10 @@ public class Controller {
     private DashboardUtente dashboardUtente;
     private DashboardGiudice dashboardGiudice;
     private DashboardOrganizzatore dashboardOrganizzatore;
+    private int passoCreazione;
+    private ArrayList<String> datiHackaton;
+    private ArrayList<Hackathon> listaHackathon = new ArrayList<>();
+
 
 
     public Controller () {
@@ -193,9 +200,181 @@ public class Controller {
             frame2.setResizable(false);
 
             messaggioBenvenuto2.setText("Organizzatore, " + organizzatore.getMail() + " ");
+            JPanel pannelloLogico = dashboardOrganizzatore.getPannelloLogico();
+            JTextField inputField = dashboardOrganizzatore.getFieldScrittura();
+
+            inputField.addFocusListener(new FocusListener() {
+                @Override
+                public void focusGained(FocusEvent e) {
+                    JLabel labelInput = dashboardOrganizzatore.getMessaggioErroreOrg();
+                    labelInput.setForeground(Color.WHITE);
+
+                    String[] domande = {
+                            "Inserisci il titolo.",
+                            "Inserisci la sede.",
+                            "Inserisci il n° max di partecipanti.",
+                            "Inserisci la grandezza max del team."
+                    };
+
+                    if (passoCreazione < domande.length) {
+                        labelInput.setText(domande[passoCreazione]);
+                    }
+                }
+
+                @Override
+                public void focusLost(FocusEvent e) {
+                }
+            });
+
+            dashboardOrganizzatore.getCreaHackaton().addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    dashboardOrganizzatore.getPannelloLogico().setVisible(true);
+                    dashboardOrganizzatore.getScrollPaneVisualizza().setVisible(false);
+                    dashboardOrganizzatore.getAreaDiTesto().setVisible(true);
+                    dashboardOrganizzatore.getFieldScrittura().setVisible(true);
+                    dashboardOrganizzatore.getIndietroButton().setVisible(true);
+                    dashboardOrganizzatore.getMessaggioErroreOrg().setVisible(true);
+                    passoCreazione = 0;
+                    datiHackaton = new ArrayList<>();
+                    gestisciPannelloLogicoDashboardOrganizzatore();
+
+                }
+            });
+
+
+            dashboardOrganizzatore.getCreateButton().addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String titolo = datiHackaton.get(0);
+                    String sede = datiHackaton.get(1);
+                    int maxPartecipanti = Integer.parseInt(datiHackaton.get(2));
+                    int maxGrandezzaTeam = Integer.parseInt(datiHackaton.get(3));
+
+                    Hackathon nuovoHackathon = organizzatore.creaHackathon(titolo, sede, maxPartecipanti, maxGrandezzaTeam);
+                    listaHackathon.add(nuovoHackathon);
+
+                    JOptionPane.showMessageDialog(frame2, "Hackathon \"" + nuovoHackathon.getTitolo() + "\" creato con successo");
+
+                    dashboardOrganizzatore.getPannelloLogico().setVisible(false);
+                    dashboardOrganizzatore.getCreaHackaton().setVisible(true);
+
+                }
+            });
+
+            dashboardOrganizzatore.getAvantiButton().addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String inputUtente = dashboardOrganizzatore.getFieldScrittura().getText().trim();
+
+                    if (inputUtente.isEmpty()) {
+                        dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                        dashboardOrganizzatore.getMessaggioErroreOrg().setText("Il campo non può essere vuoto.");
+                        return;
+                    }
+                    if ((passoCreazione == 2 || passoCreazione == 3) && !inputUtente.matches("\\d+")) {
+                        dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                        dashboardOrganizzatore.getMessaggioErroreOrg().setText("Inserisci un valore numerico.");
+                        return;
+                    }
+                    datiHackaton.add(inputUtente);
+                    passoCreazione++;
+                    gestisciPannelloLogicoDashboardOrganizzatore();
+            }
+            });
+
+            dashboardOrganizzatore.getIndietroButton().addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (passoCreazione > 0) {
+                        String valorePrecedente = datiHackaton.getLast();
+                        datiHackaton.removeLast();
+                        passoCreazione--;
+                        gestisciPannelloLogicoDashboardOrganizzatore();
+                        dashboardOrganizzatore.getFieldScrittura().setText(valorePrecedente);
+                    }
+                }
+            });
+
+           dashboardOrganizzatore.getVisualizzaHackathon().addActionListener(new ActionListener() {
+               @Override
+               public void actionPerformed(ActionEvent e) {
+                   dashboardOrganizzatore.getPannelloLogico().setVisible(true);
+                   dashboardOrganizzatore.getAvantiButton().setVisible(false);
+                   dashboardOrganizzatore.getIndietroButton().setVisible(false);
+                   dashboardOrganizzatore.getCreateButton().setVisible(false);
+                   dashboardOrganizzatore.getFieldScrittura().setVisible(false);
+                   dashboardOrganizzatore.getAreaDiTesto().setVisible(false);
+                   dashboardOrganizzatore.getMessaggioErroreOrg().setVisible(false);
+                   dashboardOrganizzatore.getScrollPaneVisualizza().setVisible(true);
+
+                   JTextArea textArea = dashboardOrganizzatore.getTextAreaVisualizza();
+                   JScrollPane scrollPane = dashboardOrganizzatore.getScrollPaneVisualizza();
+                   textArea.setEditable(false);
+                   textArea.setText(""); // Pulisci l'area di testo
+                   Color coloreSfondo = dashboardOrganizzatore.getPannelloLogico().getBackground();
+
+                   textArea.setEditable(false);
+                   textArea.setBackground(coloreSfondo);
+                   textArea.setForeground(Color.WHITE);
+                   scrollPane.getViewport().setBackground(coloreSfondo);
+                   scrollPane.setBorder(null);
+
+                   if (listaHackathon.isEmpty()) {
+                       textArea.setText("Nessun hackathon è stato ancora creato.");
+                   } else {
+                       textArea.setText("--- Hackathon Disponibili ---\n\n");
+                       for (Hackathon hack : listaHackathon) {
+                           textArea.append("Titolo: " + hack.getTitolo() + "\n");
+                           textArea.append("Sede: " + hack.getSede() + "\n");
+                           textArea.append("Max Partecipanti: " + hack.getMaxPartecipanti() + "\n");
+                            textArea.append("Max Grandezza Team: " + hack.getMaxGrandezzaTeam() + "\n");
+                            textArea.append("Partecipanti Iscritti: " + hack.getIscrizioniCount() + "\n");
+                            textArea.append("Organizzatore: " + hack.getOrganizzatore() + "\n");
+                           textArea.append("-------------------------------------\n");
+                       }
+                   }
+               }
+
+           });
+
     }
+            private void gestisciPannelloLogicoDashboardOrganizzatore() {
+                JLabel labelIstruzioni = dashboardOrganizzatore.getAreaDiTesto();
+                JLabel labelInput = dashboardOrganizzatore.getMessaggioErroreOrg();
+                JTextField inputField = dashboardOrganizzatore.getFieldScrittura();
+                JButton avantiBtn = dashboardOrganizzatore.getAvantiButton();
+                JButton indietroBtn = dashboardOrganizzatore.getIndietroButton();
+                JButton creaBtn = dashboardOrganizzatore.getCreateButton();
 
+                labelInput.setForeground(Color.WHITE);
+                indietroBtn.setVisible(passoCreazione > 0);
+                avantiBtn.setVisible(true);
+                creaBtn.setVisible(false);
+                inputField.setText("");
+                inputField.requestFocusInWindow();
 
+                String[] etichetteCampi = {"Titolo:", "Sede:", "Max Partecipanti:", "Max Grandezza Team:"};
+                String[] domande = {"Inserisci il titolo.", "Inserisci la sede.", "Inserisci il n° max di partecipanti.", "Inserisci la grandezza max del team."};
 
+                String formText = "<html>Creazione Hackathon<br><br>";
+                for (int i = 0; i < etichetteCampi.length; i++) {
+                    formText += etichetteCampi[i] + " ";
+                    if (i < datiHackaton.size()) {
+                        formText += datiHackaton.get(i);
+                    } else if (i == passoCreazione) {
+                    }
+                    formText += "<br>";
+                }
+                formText += "</html>";
+                labelIstruzioni.setText(formText);
 
+                if (passoCreazione < domande.length) {
+                    labelInput.setText(domande[passoCreazione]);
+                } else {
+                    labelInput.setText("Clicca 'Crea' per confermare.");
+                    avantiBtn.setVisible(false);
+                    creaBtn.setVisible(true);
+                }
+            }
     }
