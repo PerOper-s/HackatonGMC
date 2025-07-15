@@ -21,17 +21,19 @@ public class Hackathon {
     private List<Problema> problemi;
 
     // Costruttore con i campi fondamentali
-    public Hackathon(String titolo, String sede, Organizzatore organizzatore, int maxPartecipanti, int maxGrandezzaTeam) {
+    public Hackathon(String titolo, String sede, Organizzatore organizzatore,
+                     int maxPartecipanti, int maxGrandezzaTeam, String inizio,
+                     String inizioIscrizioni, String fineIscrizioni) {
         this.titolo = titolo;
         this.organizzatore = organizzatore;
         this.maxPartecipanti = maxPartecipanti;
         this.maxGrandezzaTeam = maxGrandezzaTeam;
-        // Valori di default per gli altri campi
-        this.inizio = "";
-        this.sede = "";
+
+        this.inizio = inizio;
+        this.sede = sede;
         this.descrizioneProblem = "";
-        this.inizioIscrizioni = "";
-        this.fineIscrizioni = "";
+        this.inizioIscrizioni = inizioIscrizioni;
+        this.fineIscrizioni = fineIscrizioni;
 
         this.iscrizioni = new ArrayList<>();
         this.giudiciInvitati = new ArrayList<>();
@@ -60,6 +62,16 @@ public class Hackathon {
 
     public int getMaxGrandezzaTeam() {
         return maxGrandezzaTeam;
+    }
+
+    public String getInizio() {
+        return inizio;
+    }
+    public String getInizioIscrizioni() {
+        return inizioIscrizioni;
+    }
+    public String getFineIscrizioni() {
+        return fineIscrizioni;
     }
 
     // Aggiunge un partecipante all'hackathon, creando un'iscrizione con la data fornita

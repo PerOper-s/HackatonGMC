@@ -7,8 +7,8 @@ public class Organizzatore extends Utente {
     }
 
     // Crea un nuovo Hackathon
-    public Hackathon creaHackathon(String titolo, String sede, int maxPartecipanti, int maxGrandezzaTeam) {
-        Hackathon hack = new Hackathon(titolo, sede, this, maxPartecipanti, maxGrandezzaTeam);
+    public Hackathon creaHackathon(String titolo, String sede, int maxPartecipanti, int maxGrandezzaTeam, String inizio, String inizioIscrizioni, String fineIscrizioni) {
+        Hackathon hack = new Hackathon(titolo, sede, this, maxPartecipanti, maxGrandezzaTeam, inizio, inizioIscrizioni, fineIscrizioni);
         System.out.println("Hackathon \"" + hack.getTitolo() + "\" creato con successo.");
         return hack;
     }
