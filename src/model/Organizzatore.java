@@ -6,20 +6,12 @@ public class Organizzatore extends Utente {
         super(mail);
     }
 
-    // Crea un nuovo Hackathon
-    public Hackathon creaHackathon() {
-        Hackathon hack = new Hackathon("Hackathon di " + this.getMail(), this, 100, 5);
-        System.out.println("Hackathon \"" + hack.getTitolo() + "\" creato dall'organizzatore " + this.getMail());
-        return hack;
+    public Hackathon creaHackathon(String titolo, int maxPartecipanti, int maxGrandezzaTeam, String sede, String inizio, String inizioIscrizioni, String fineIscrizioni) {
+        Hackathon hackathon = new Hackathon(titolo, this, maxPartecipanti, maxGrandezzaTeam, sede, inizio, inizioIscrizioni, fineIscrizioni);
+        System.out.println("Hackathon \"" + hackathon.getTitolo() + "\" creato con successo");
+        return hackathon;
     }
 
-    // Invita i giudici
-    public void invitaGiudici() {
-        // In un caso reale si inviterebbero giudici specifici; qui stampa un messaggio di esempio
-        System.out.println("Giudici invitati all'hackathon.");
-    }
-
-    // Invita uno specifico giudice a un determinato hackathon
     public void invitaGiudici(Giudice giudice, Hackathon hackathon) {
         hackathon.aggiungiGiudice(giudice);
         giudice.partecipaHackathon(hackathon);
