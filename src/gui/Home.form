@@ -20,7 +20,7 @@
         </constraints>
         <properties>
           <enabled value="true"/>
-          <font size="36" style="1"/>
+          <font name="Inter" size="36" style="1"/>
           <foreground color="-1"/>
           <text value="Hackaton"/>
         </properties>
@@ -32,7 +32,7 @@
           </grid>
         </constraints>
         <properties>
-          <icon value="icone/icons8-user-64.png"/>
+          <icon value="icone/icone bianche/icons8-user-56.png"/>
           <text value=""/>
         </properties>
       </component>
@@ -43,8 +43,11 @@
           </grid>
         </constraints>
         <properties>
-          <background color="-16708570"/>
+          <background color="-13877680"/>
+          <caretColor color="-13877680"/>
+          <disabledTextColor color="-1"/>
           <enabled value="true"/>
+          <font name="Inter"/>
           <foreground color="-1"/>
           <requestFocusEnabled value="true"/>
           <selectionColor color="-1"/>
@@ -53,31 +56,42 @@
       </component>
       <component id="f0f13" class="javax.swing.JRadioButton" binding="utenteRadioButton" default-binding="true">
         <constraints>
-          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <background color="-16708570"/>
-          <foreground color="-1"/>
+          <background color="-13285286"/>
+          <focusPainted value="false"/>
+          <font name="Inter"/>
+          <foreground color="-3418666"/>
+          <opaque value="false"/>
+          <selected value="false"/>
           <text value="Utente"/>
         </properties>
       </component>
       <component id="e2a30" class="javax.swing.JRadioButton" binding="organizzatoreRadioButton" default-binding="true">
         <constraints>
-          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <background color="-16708570"/>
-          <foreground color="-1"/>
+          <background color="-13285286"/>
+          <enabled value="true"/>
+          <focusPainted value="false"/>
+          <font name="Inter"/>
+          <foreground color="-3418666"/>
+          <opaque value="false"/>
           <text value="Organizzatore"/>
         </properties>
       </component>
       <component id="e10fa" class="javax.swing.JRadioButton" binding="giudiceRadioButton" default-binding="true">
         <constraints>
-          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <background color="-16708570"/>
-          <foreground color="-1"/>
+          <background color="-13285286"/>
+          <focusPainted value="false"/>
+          <font name="Inter"/>
+          <foreground color="-3418666"/>
+          <opaque value="false"/>
           <text value="Giudice"/>
         </properties>
       </component>
@@ -88,12 +102,12 @@
         <properties>
           <actionCommand value="Button"/>
           <autoscrolls value="false"/>
-          <background color="-16708570"/>
+          <background color="-13285286"/>
           <enabled value="true"/>
           <focusPainted value="true"/>
           <focusable value="true"/>
-          <font/>
-          <foreground color="-1"/>
+          <font name="Inter"/>
+          <foreground color="-6708316"/>
           <hideActionText value="false"/>
           <label value="Login"/>
           <opaque value="true"/>
