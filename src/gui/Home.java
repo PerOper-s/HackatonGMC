@@ -73,6 +73,7 @@ public class Home {
         utenteRadioButton.setOpaque(false);
         utenteRadioButton.setSelected(false);
         utenteRadioButton.setText("Utente");
+        utenteRadioButton.setVisible(true);
         panel1.add(utenteRadioButton, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         organizzatoreRadioButton = new JRadioButton();
         organizzatoreRadioButton.setBackground(new Color(-13285286));
@@ -92,6 +93,7 @@ public class Home {
         giudiceRadioButton.setForeground(new Color(-3418666));
         giudiceRadioButton.setOpaque(false);
         giudiceRadioButton.setText("Giudice");
+        giudiceRadioButton.setVisible(true);
         panel1.add(giudiceRadioButton, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         loginBtn = new JButton();
         loginBtn.setActionCommand("Button");

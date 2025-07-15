@@ -66,6 +66,7 @@
           <opaque value="false"/>
           <selected value="false"/>
           <text value="Utente"/>
+          <visible value="true"/>
         </properties>
       </component>
       <component id="e2a30" class="javax.swing.JRadioButton" binding="organizzatoreRadioButton" default-binding="true">
@@ -93,6 +94,7 @@
           <foreground color="-3418666"/>
           <opaque value="false"/>
           <text value="Giudice"/>
+          <visible value="true"/>
         </properties>
       </component>
       <component id="429e9" class="javax.swing.JButton" binding="loginBtn">

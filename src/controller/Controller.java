@@ -7,6 +7,7 @@ import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.text.ParseException;
+import java.util.Date;
 
 import model.*;
 public class Controller {
@@ -216,7 +217,10 @@ public class Controller {
                             "Inserisci il titolo.",
                             "Inserisci la sede.",
                             "Inserisci il n° max di partecipanti.",
-                            "Inserisci la grandezza max del team."
+                            "Inserisci la grandezza max del team.",
+                            "Inserisci la data di inizio (GG/MM/AAAA).",
+                            "Data inizio iscrizioni (GG/MM/AAAA).",
+                            "Data fine iscrizioni (GG/MM/AAAA)."
                     };
 
                     if (passoCreazione < domande.length) {
@@ -261,13 +265,15 @@ public class Controller {
                     listaHackathon.add(nuovoHackathon);
 
                     JOptionPane.showMessageDialog(frame2, "Hackathon \"" + nuovoHackathon.getTitolo() + "\" creato con successo");
-                    // ... (codice per resettare la UI)
+
                 }
             });
 
             dashboardOrganizzatore.getAvantiButton().addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
                     String inputUtente = dashboardOrganizzatore.getFieldScrittura().getText().trim();
                     if (inputUtente.isEmpty()) {
                         dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
@@ -282,6 +288,53 @@ public class Controller {
                     if ((passoCreazione == 4 || passoCreazione == 5 || passoCreazione == 6) && !isDateValid(inputUtente)) {
                         dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
                         dashboardOrganizzatore.getMessaggioErroreOrg().setText("Formato data non valido. Usa GG/MM/AAAA.");
+                        return;
+                    }
+
+
+                    try {
+
+                        if (passoCreazione == 4) {
+                            if (sdf.parse(inputUtente).before(getOggiSenzaOrario())) {
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("La data dell'hackathon non può essere nel passato.");
+                                return;
+                            }
+                        }
+
+
+                        if (passoCreazione == 5) {
+                            Date dataInizioIscrizioni = sdf.parse(inputUtente);
+                            Date dataInizioHackathon = sdf.parse(datiHackaton.get(4));
+                            if (dataInizioIscrizioni.before(getOggiSenzaOrario())) {
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("L'inizio iscrizioni non può essere nel passato.");
+                                return;
+                            }
+                            if (!dataInizioIscrizioni.before(dataInizioHackathon)) {
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Le iscrizioni devono iniziare prima dell'hackathon.");
+                                return;
+                            }
+                        }
+
+
+                        if (passoCreazione == 6) {
+                            Date dataFineIscrizioni = sdf.parse(inputUtente);
+                            Date dataInizioIscrizioni = sdf.parse(datiHackaton.get(5));
+                            Date dataInizioHackathon = sdf.parse(datiHackaton.get(4));
+                            if (!dataFineIscrizioni.after(dataInizioIscrizioni)) {
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("La fine deve essere dopo l'inizio delle iscrizioni.");
+                                return;
+                            }
+                            if (!dataFineIscrizioni.before(dataInizioHackathon)) {
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Le iscrizioni devono finire prima dell'hackathon.");
+                                return;
+                            }
+                        }
+                    } catch (java.text.ParseException ex) {
                         return;
                     }
                     datiHackaton.add(inputUtente);
@@ -359,7 +412,20 @@ public class Controller {
                     } catch (java.text.ParseException e) {
                         return false;
                     }
+
     }
+
+                private Date getOggiSenzaOrario() {
+                    // Usa il Calendar per impostare ore, minuti, secondi e millisecondi a zero
+                    java.util.Calendar cal = java.util.Calendar.getInstance();
+                    cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                    cal.set(java.util.Calendar.MINUTE, 0);
+                    cal.set(java.util.Calendar.SECOND, 0);
+                    cal.set(java.util.Calendar.MILLISECOND, 0);
+                    return cal.getTime();
+                }
+
+
             private void gestisciPannelloLogicoDashboardOrganizzatore() {
                 JLabel labelIstruzioni = dashboardOrganizzatore.getAreaDiTesto();
                 JLabel labelInput = dashboardOrganizzatore.getMessaggioErroreOrg();
