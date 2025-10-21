@@ -8,6 +8,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.text.ParseException;
 import java.util.Date;
+import dao.UtenteDAO;
+import daoImpl.UtenteDAOImpl;
+import dao.HackathonDAO;
+import daoImpl.HackathonDAOImpl;
+
 
 import model.*;
 public class Controller {
@@ -79,82 +84,61 @@ public class Controller {
             }
        });
 
-       loginButton.addActionListener(new ActionListener () {
+        loginButton.addActionListener(e -> {
+            String email = campoEmail.getText().trim();
+            String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
 
-           public void actionPerformed(ActionEvent e) {
-               String emailInserita = campoEmail.getText();
-               String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
-               boolean emailValida = false;
-               boolean ruoloSelezionato = false;
+            if (gruppoRuoli.getSelection() == null) {
+                messaggioErrore.setText("Seleziona un ruolo");
+                return;
+            }
 
-               if (gruppoRuoli.getSelection() == null) {
-                   messaggioErrore.setText("Seleziona un ruolo");
-                   return;
-               } else {
-                   messaggioErrore.setText("");
-                   ruoloSelezionato = true;
-               }
+            if (email.equals("Email") || email.isEmpty()) {
+                messaggioErrore.setText("Inserisci un'email valida");
+                return;
+            }
 
-               if (emailInserita.equals("Email") || emailInserita.isEmpty()) {
-                   messaggioErrore.setText("Inserisci un'email valida");
-                   return;
-               }
-               if (!emailInserita.matches(emailRegex)) {
-                   messaggioErrore.setText("Formato email non valido.");
-                   return;
-               } else {
-                   messaggioErrore.setText("");
-                   emailValida = true;
-               }
+            if (!email.matches(emailRegex)) {
+                messaggioErrore.setText("Formato email non valido.");
+                return;
+            }
 
-               Utente nuovoUtente = null;
-               String ruoloSelezionatoTesto = "";
-               if (ruoloSelezionato == true && emailValida == true) {
+            String ruolo = null;
+            if (utenteRadioButton.isSelected()) ruolo = "utente";
+            else if (organizzatoreRadioButton.isSelected()) ruolo = "organizzatore";
+            else if (giudiceRadioButton.isSelected()) ruolo = "giudice";
 
-                   if (utenteRadioButton.isSelected()) {
-                       nuovoUtente = new Utente(emailInserita);
-                          ruoloSelezionatoTesto = "Utente";
-                   } else if (organizzatoreRadioButton.isSelected()) {
-                       nuovoUtente = new Organizzatore(emailInserita);
-                          ruoloSelezionatoTesto = "Organizzatore";
-                   } else if (giudiceRadioButton.isSelected()) {
-                       nuovoUtente = new Giudice(emailInserita);
-                          ruoloSelezionatoTesto = "Giudice";
-                   }
+            dao.UtenteDAO dao = new daoImpl.UtenteDAOImpl();
+            if (!dao.esisteUtente(email, ruolo)) {
+                dao.registraUtente(email, ruolo);
+                System.out.println("Utente registrato nel DB.");
+            } else {
+                System.out.println("Utente già esistente.");
+            }
 
-                   if (nuovoUtente != null) {
+            frame.dispose();
 
-                       nuovoUtente.registrati();
-                       frame.dispose();
+            if (ruolo.equals("utente")) {
+                Utente nuovoUtente = new Utente(email);
+                dashboardUtente = new DashboardUtente(nuovoUtente.getMail());
+                gestisciDashboardUtente(nuovoUtente);
+            }
 
-                       if (ruoloSelezionatoTesto.equals("Utente")) {
-                          dashboardUtente = new DashboardUtente(nuovoUtente.getMail());
-                            gestisciDashboardUtente(nuovoUtente);
-                            return;
-                       }
+            if (ruolo.equals("organizzatore")) {
+                Organizzatore nuovoUtente = new Organizzatore(email);
+                dashboardOrganizzatore = new DashboardOrganizzatore(nuovoUtente.getMail());
+                gestisciDashboardOrganizzatore(nuovoUtente);
+            }
 
-                       if (ruoloSelezionatoTesto.equals("Organizzatore")) {
-                           dashboardOrganizzatore = new DashboardOrganizzatore(nuovoUtente.getMail());
-                           gestisciDashboardOrganizzatore((Organizzatore) nuovoUtente);
-                           return;
-                       }
-
-                       if (ruoloSelezionatoTesto.equals("Giudice")) {
-
-                          dashboardGiudice = new DashboardGiudice(nuovoUtente.getMail());
-                            gestisciDashboardGiudice((Giudice) nuovoUtente);
-                            return;
-                       }
-                   }
+            if (ruolo.equals("giudice")) {
+                Giudice nuovoUtente = new Giudice(email);
+                dashboardGiudice = new DashboardGiudice(nuovoUtente.getMail());
+                gestisciDashboardGiudice(nuovoUtente);
+            }
+        });
 
 
-               }
-
-           }
-
-       });
-
-       loginPanel.addMouseListener(new MouseAdapter(){
+        loginPanel.addMouseListener(new MouseAdapter(){
 
            @Override
            public void mousePressed(MouseEvent e){
@@ -204,7 +188,6 @@ public class Controller {
             dashboardOrganizzatore.getDashboardOrganizzatore().requestFocusInWindow();
 
             messaggioBenvenuto2.setText("Organizzatore, " + organizzatore.getMail() + " ");
-            JPanel pannelloLogico = dashboardOrganizzatore.getPannelloLogico();
             JTextField inputField = dashboardOrganizzatore.getFieldScrittura();
 
             inputField.addFocusListener(new FocusListener() {
@@ -263,6 +246,8 @@ public class Controller {
 
                     Hackathon nuovoHackathon = organizzatore.creaHackathon(titolo, sede, maxPartecipanti, maxGrandezzaTeam, inizio, inizioIscrizioni, fineIscrizioni);
                     listaHackathon.add(nuovoHackathon);
+                    HackathonDAO dao = new HackathonDAOImpl();
+                    dao.creaHackathon(nuovoHackathon);
 
                     JOptionPane.showMessageDialog(frame2, "Hackathon \"" + nuovoHackathon.getTitolo() + "\" creato con successo");
 
@@ -276,6 +261,7 @@ public class Controller {
 
                     String inputUtente = dashboardOrganizzatore.getFieldScrittura().getText().trim();
                     if (inputUtente.isEmpty()) {
+
                         dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
                         dashboardOrganizzatore.getMessaggioErroreOrg().setText("Il campo non può essere vuoto.");
                         return;
@@ -416,7 +402,7 @@ public class Controller {
     }
 
                 private Date getOggiSenzaOrario() {
-                    // Usa il Calendar per impostare ore, minuti, secondi e millisecondi a zero
+
                     java.util.Calendar cal = java.util.Calendar.getInstance();
                     cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
                     cal.set(java.util.Calendar.MINUTE, 0);
