@@ -20,7 +20,7 @@ public class Hackathon {
     private List<Classifica> classifica;
     private List<Problema> problemi;
 
-    // Costruttore con i campi fondamentali
+
     public Hackathon(String titolo, String sede, Organizzatore organizzatore,
                      int maxPartecipanti, int maxGrandezzaTeam, String inizio,
                      String inizioIscrizioni, String fineIscrizioni) {
@@ -72,6 +72,9 @@ public class Hackathon {
     }
     public String getFineIscrizioni() {
         return fineIscrizioni;
+    }
+    public List<Giudice> getGiudiciInvitati() {
+        return giudiciInvitati;
     }
 
     // Aggiunge un partecipante all'hackathon, creando un'iscrizione con la data fornita

@@ -12,6 +12,8 @@ import dao.UtenteDAO;
 import daoImpl.UtenteDAOImpl;
 import dao.HackathonDAO;
 import daoImpl.HackathonDAOImpl;
+import java.util.List;
+import model.Hackathon;
 
 
 import model.*;
@@ -31,6 +33,10 @@ public class Controller {
     private int passoCreazione;
     private ArrayList<String> datiHackaton;
     private ArrayList<Hackathon> listaHackathon = new ArrayList<>();
+    private int passoInvitoGiudice;
+    private ArrayList<String> datiInvitoGiudice;
+    private Hackathon hackathonSelezionato;
+
 
 
 
@@ -228,121 +234,245 @@ public class Controller {
                     passoCreazione = 0;
                     datiHackaton = new ArrayList<>();
                     gestisciPannelloLogicoDashboardOrganizzatore();
+                    passoInvitoGiudice = -1;
+                    datiInvitoGiudice.clear();
 
                 }
             });
 
 
+            // Listener per il pulsante "Create" nella dashboard dell'organizzatore
             dashboardOrganizzatore.getCreateButton().addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    String titolo = datiHackaton.get(0);
-                    String sede = datiHackaton.get(1);
-                    int maxPartecipanti = Integer.parseInt(datiHackaton.get(2));
-                    int maxGrandezzaTeam = Integer.parseInt(datiHackaton.get(3));
-                    String inizio = datiHackaton.get(4);
-                    String inizioIscrizioni = datiHackaton.get(5);
-                    String fineIscrizioni = datiHackaton.get(6);
+                    // Flusso INVITO GIUDICE
+                    if (passoInvitoGiudice >= 0 && datiInvitoGiudice.size() == 2) {
+                        // 1. Estrazione dei dati di invito (titolo hackathon e email del giudice)
+                        String titolo = datiInvitoGiudice.get(0);
+                        String emailGiudice = datiInvitoGiudice.get(1);
 
-                    Hackathon nuovoHackathon = organizzatore.creaHackathon(titolo, sede, maxPartecipanti, maxGrandezzaTeam, inizio, inizioIscrizioni, fineIscrizioni);
-                    listaHackathon.add(nuovoHackathon);
-                    HackathonDAO dao = new HackathonDAOImpl();
-                    dao.creaHackathon(nuovoHackathon);
+                        // 2. Ricerca dell'hackathon corrispondente (deve appartenere all'organizzatore corrente)
+                        Hackathon selezionato = null;
+                        for (Hackathon h : listaHackathon) {
+                            if (h.getTitolo().equalsIgnoreCase(titolo)
+                                    && h.getOrganizzatore().equals(organizzatore.getMail())) {
+                                selezionato = h;
+                                break;
+                            }
+                        }
+                        if (selezionato == null) {
+                            // Hackathon non trovata o non di proprietà dell'organizzatore: mostra un messaggio di errore
+                            JOptionPane.showMessageDialog(frame2, "Hackathon non trovata o non appartiene all'organizzatore.", "Errore", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
 
-                    JOptionPane.showMessageDialog(frame2, "Hackathon \"" + nuovoHackathon.getTitolo() + "\" creato con successo");
+                        // 3. Controlla che il giudice non sia già stato invitato a questa hackathon
+                        for (Giudice giudiceInvitato : selezionato.getGiudiciInvitati()) {
+                            if (giudiceInvitato.getMail().equalsIgnoreCase(emailGiudice)) {
+                                JOptionPane.showMessageDialog(frame2, "Giudice già invitato.", "Attenzione", JOptionPane.WARNING_MESSAGE);
+                                return;
+                            }
+                        }
 
+                        // 4. Se tutto è valido, esegue l'invito del giudice tramite il metodo dell'organizzatore
+                        Giudice nuovoGiudice = new Giudice(emailGiudice);
+                        organizzatore.invitaGiudici(nuovoGiudice, selezionato);  // chiamata al metodo del model
+                        JOptionPane.showMessageDialog(frame2, "Giudice invitato con successo a " + titolo + "!", "Successo", JOptionPane.INFORMATION_MESSAGE);
+
+                        // 5. Reset dell'interfaccia (pannello logico) dopo l'invito
+                        dashboardOrganizzatore.getPannelloLogico().setVisible(false);
+                        datiInvitoGiudice.clear();
+                        passoInvitoGiudice = -1;
+                        dashboardOrganizzatore.getFieldScrittura().setText("");
+                        dashboardOrganizzatore.getMessaggioErroreOrg().setText("");
+                        return;
+                    }
+
+                    // Flusso CREAZIONE HACKATHON (parte esistente)
+                    if (passoCreazione == 7) {
+                        // Raccolta dei dati inseriti per la nuova hackathon
+                        String titolo = datiHackaton.get(0);
+                        String sede = datiHackaton.get(1);
+                        int maxPartecipanti = Integer.parseInt(datiHackaton.get(2));
+                        int maxTeamSize = Integer.parseInt(datiHackaton.get(3));
+                        String dataInizio = datiHackaton.get(4);
+                        String inizioIscr = datiHackaton.get(5);
+                        String fineIscr = datiHackaton.get(6);
+
+                        // Creazione e salvataggio della nuova hackathon (nel model/DAO)
+                        Hackathon h = new Hackathon(titolo, sede, organizzatore, maxPartecipanti, maxTeamSize, dataInizio, inizioIscr, fineIscr);
+                        HackathonDAO dao = new HackathonDAOImpl();
+                        dao.creaHackathon(h);  // salvataggio nel model/DAO
+                        listaHackathon.add(h);
+
+                        // Messaggio di conferma e reset dell'interfaccia dopo la creazione
+                        JOptionPane.showMessageDialog(frame2, "Hackathon creato con successo!");
+                        datiHackaton.clear();
+                        passoCreazione = 0;
+                        dashboardOrganizzatore.getPannelloLogico().setVisible(false);
+                        dashboardOrganizzatore.getMessaggioErroreOrg().setText("");
+                    }
                 }
             });
+
+
 
             dashboardOrganizzatore.getAvantiButton().addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-
+                    // Leggi l'input inserito dall'organizzatore
                     String inputUtente = dashboardOrganizzatore.getFieldScrittura().getText().trim();
                     if (inputUtente.isEmpty()) {
-
+                        // Mostra errore se il campo di input è vuoto
                         dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
                         dashboardOrganizzatore.getMessaggioErroreOrg().setText("Il campo non può essere vuoto.");
                         return;
                     }
-                    if ((passoCreazione == 2 || passoCreazione == 3) && !inputUtente.matches("\\d+")) {
-                        dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                        dashboardOrganizzatore.getMessaggioErroreOrg().setText("Errore: Inserisci un valore numerico.");
-                        return;
-                    }
-                    if ((passoCreazione == 4 || passoCreazione == 5 || passoCreazione == 6) && !isDateValid(inputUtente)) {
-                        dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                        dashboardOrganizzatore.getMessaggioErroreOrg().setText("Formato data non valido. Usa GG/MM/AAAA.");
-                        return;
-                    }
 
-
-                    try {
-
-                        if (passoCreazione == 4) {
-                            if (sdf.parse(inputUtente).before(getOggiSenzaOrario())) {
+                    // Controlla se è in corso il flusso di invito giudice
+                    if (passoInvitoGiudice >= 0) {
+                        // ** Flusso invito giudice **
+                        if (passoInvitoGiudice == 0) {
+                            // Step 0: verifica che l'hackathon esista e appartenga all'organizzatore
+                            boolean hackathonTrovato = false;
+                            for (Hackathon h : listaHackathon) {
+                                if (h.getTitolo().equals(inputUtente) && h.getOrganizzatore().equals(organizzatore.getMail())) {
+                                    hackathonTrovato = true;
+                                    // Salva il titolo (o identificativo) dell'hackathon selezionato
+                                    datiInvitoGiudice.add(inputUtente);
+                                    break;
+                                }
+                            }
+                            if (!hackathonTrovato) {
+                                // Hackathon non trovato o non di proprietà dell'organizzatore: mostra errore
                                 dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("La data dell'hackathon non può essere nel passato.");
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Hackathon non trovata o non appartiene all'organizzatore.");
                                 return;
                             }
+                            // Hackathon valida: passa allo step successivo (invio email giudice)
+                            passoInvitoGiudice++;
+                            dashboardOrganizzatore.getFieldScrittura().setText("");
+                        } else if (passoInvitoGiudice == 1) {
+                            // Step 1: controlla la validità del formato email del giudice
+                            String emailGiudice = inputUtente;
+                            String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
+                            if (!emailGiudice.matches(emailRegex)) {
+                                // Formato email non valido: mostra errore
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Formato email non valido.");
+                                return;
+                            }
+                            // Email valida: salva l'email del giudice e passa allo step finale
+                            datiInvitoGiudice.add(emailGiudice);
+                            passoInvitoGiudice++;
+                            dashboardOrganizzatore.getFieldScrittura().setText("");
+                        } else if (passoInvitoGiudice == 2) {
+                            // Step 2: esegue le operazioni finali di invito (e.g., invio notifica) e aggiorna il pannello logico
+                            gestisciPannelloLogicoInvitoGiudice();
+                            // Reimposta lo stato del flusso di invito giudice
+                            passoInvitoGiudice = -1;
+                            datiInvitoGiudice.clear();
                         }
-
-
-                        if (passoCreazione == 5) {
-                            Date dataInizioIscrizioni = sdf.parse(inputUtente);
-                            Date dataInizioHackathon = sdf.parse(datiHackaton.get(4));
-                            if (dataInizioIscrizioni.before(getOggiSenzaOrario())) {
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("L'inizio iscrizioni non può essere nel passato.");
-                                return;
-                            }
-                            if (!dataInizioIscrizioni.before(dataInizioHackathon)) {
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Le iscrizioni devono iniziare prima dell'hackathon.");
-                                return;
-                            }
+                    } else {
+                        // ** Flusso creazione hackathon (esistente) **
+                        if ((passoCreazione == 2 || passoCreazione == 3) && !inputUtente.matches("\\d+")) {
+                            // Per i passi 2 e 3 l'input deve essere numerico (max partecipanti, max grandezza team)
+                            dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                            dashboardOrganizzatore.getMessaggioErroreOrg().setText("Errore: inserisci un valore numerico.");
+                            return;
                         }
-
-
-                        if (passoCreazione == 6) {
-                            Date dataFineIscrizioni = sdf.parse(inputUtente);
-                            Date dataInizioIscrizioni = sdf.parse(datiHackaton.get(5));
-                            Date dataInizioHackathon = sdf.parse(datiHackaton.get(4));
-                            if (!dataFineIscrizioni.after(dataInizioIscrizioni)) {
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("La fine deve essere dopo l'inizio delle iscrizioni.");
-                                return;
-                            }
-                            if (!dataFineIscrizioni.before(dataInizioHackathon)) {
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Le iscrizioni devono finire prima dell'hackathon.");
-                                return;
-                            }
+                        if ((passoCreazione == 4 || passoCreazione == 5 || passoCreazione == 6) && !isDateValid(inputUtente)) {
+                            // Per i passi 4, 5, 6 l'input deve essere una data valida nel formato GG/MM/AAAA
+                            dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                            dashboardOrganizzatore.getMessaggioErroreOrg().setText("Formato data non valido. Usa GG/MM/AAAA.");
+                            return;
                         }
-                    } catch (java.text.ParseException ex) {
-                        return;
+                        try {
+                            if (passoCreazione == 4) {
+                                // Step 4: la data di inizio hackathon non può essere nel passato
+                                if (new SimpleDateFormat("dd/MM/yyyy").parse(inputUtente).before(getOggiSenzaOrario())) {
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setText("La data dell'hackathon non può essere nel passato.");
+                                    return;
+                                }
+                            }
+                            if (passoCreazione == 5) {
+                                // Step 5: la data di inizio iscrizioni deve essere prima dell'inizio hackathon e non nel passato
+                                Date dataInizioIscrizioni = new SimpleDateFormat("dd/MM/yyyy").parse(inputUtente);
+                                Date dataInizioHackathon = new SimpleDateFormat("dd/MM/yyyy").parse(datiHackaton.get(4));
+                                if (dataInizioIscrizioni.before(getOggiSenzaOrario())) {
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setText("L'inizio delle iscrizioni non può essere nel passato.");
+                                    return;
+                                }
+                                if (!dataInizioIscrizioni.before(dataInizioHackathon)) {
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setText("Le iscrizioni devono iniziare prima dell'inizio dell'hackathon.");
+                                    return;
+                                }
+                            }
+                            if (passoCreazione == 6) {
+                                // Step 6: la data di fine iscrizioni deve essere dopo l'inizio iscrizioni ma prima dell'inizio hackathon
+                                Date dataFineIscrizioni = new SimpleDateFormat("dd/MM/yyyy").parse(inputUtente);
+                                Date dataInizioIscrizioni = new SimpleDateFormat("dd/MM/yyyy").parse(datiHackaton.get(5));
+                                Date dataInizioHackathon = new SimpleDateFormat("dd/MM/yyyy").parse(datiHackaton.get(4));
+                                if (!dataFineIscrizioni.after(dataInizioIscrizioni)) {
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setText("La data di fine iscrizioni deve essere successiva all'inizio delle iscrizioni.");
+                                    return;
+                                }
+                                if (!dataFineIscrizioni.before(dataInizioHackathon)) {
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
+                                    dashboardOrganizzatore.getMessaggioErroreOrg().setText("Le iscrizioni devono concludersi prima dell'inizio dell'hackathon.");
+                                    return;
+                                }
+                            }
+                        } catch (ParseException ex) {
+                            // Se il parsing delle date fallisce, interrompe senza avanzare di passo
+                            return;
+                        }
+                        // Salva il dato inserito e avanza al prossimo passo della creazione hackathon
+                        datiHackaton.add(inputUtente);
+                        passoCreazione++;
+                        gestisciPannelloLogicoDashboardOrganizzatore();
                     }
-                    datiHackaton.add(inputUtente);
-                    passoCreazione++;
-                    gestisciPannelloLogicoDashboardOrganizzatore();
                 }
             });
+
 
             dashboardOrganizzatore.getIndietroButton().addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (passoCreazione > 0) {
-                        String valorePrecedente = datiHackaton.getLast();
-                        datiHackaton.removeLast();
-                        passoCreazione--;
-                        gestisciPannelloLogicoDashboardOrganizzatore();
-                        dashboardOrganizzatore.getFieldScrittura().setText(valorePrecedente);
+                    if (passoInvitoGiudice >= 0) {
+                        // Flusso invito giudici: torna allo step precedente (se possibile)
+                        if (passoInvitoGiudice > 0) {
+                            // Rimuove l'ultimo dato inserito e torna indietro di uno step
+                            int lastIndex = datiInvitoGiudice.size() - 1;
+                            String valorePrecedente = datiInvitoGiudice.remove(lastIndex);
+                            passoInvitoGiudice--;
+                            gestisciPannelloLogicoInvitoGiudice();
+                            // Ripristina nel campo di input il valore precedente per eventuale correzione
+                            dashboardOrganizzatore.getFieldScrittura().setText(valorePrecedente);
+                        } else {
+                            // Se passoInvitoGiudice == 0, si potrebbe chiudere/annullare il pannello di invito
+                            dashboardOrganizzatore.getPannelloLogico().setVisible(false);
+                            passoInvitoGiudice = -1;
+                        }
+                    } else {
+
+                        if (passoCreazione > 0) {
+                            String valorePrecedente = datiHackaton.get(datiHackaton.size() - 1);
+                            datiHackaton.remove(datiHackaton.size() - 1);
+                            passoCreazione--;
+                            gestisciPannelloLogicoDashboardOrganizzatore();
+                            dashboardOrganizzatore.getFieldScrittura().setText(valorePrecedente);
+                        }
                     }
                 }
             });
 
-           dashboardOrganizzatore.getVisualizzaHackathon().addActionListener(new ActionListener() {
+
+            dashboardOrganizzatore.getVisualizzaHackathon().addActionListener(new ActionListener() {
                @Override
                public void actionPerformed(ActionEvent e) {
                    dashboardOrganizzatore.getPannelloLogico().setVisible(true);
@@ -367,28 +497,92 @@ public class Controller {
                    scrollPane.getViewport().setBackground(coloreSfondo);
                    scrollPane.setBorder(null);
 
-                   if (listaHackathon.isEmpty()) {
+                   HackathonDAO dao = new HackathonDAOImpl();
+                   List<Hackathon> listaDalDB = dao.findAll();
+
+                   if (listaDalDB.isEmpty()) {
                        textArea.setText("Nessun hackathon è stato ancora creato.");
                    } else {
                        textArea.setText("--- Hackathon Disponibili ---\n\n");
-                       for (Hackathon hack : listaHackathon) {
+                       for (Hackathon hack : listaDalDB) {
                            textArea.append("Titolo: " + hack.getTitolo() + "\n");
                            textArea.append("Sede: " + hack.getSede() + "\n");
                            textArea.append("Max Partecipanti: " + hack.getMaxPartecipanti() + "\n");
-                            textArea.append("Max Grandezza Team: " + hack.getMaxGrandezzaTeam() + "\n");
-                            textArea.append("Data Inizio: " + hack.getInizio() + "\n");
-                            textArea.append("Inizio Iscrizioni: " + hack.getInizioIscrizioni() + "\n");
-                            textArea.append("Fine Iscrizioni: " + hack.getFineIscrizioni() + "\n");
-                            textArea.append("Partecipanti Iscritti: " + hack.getIscrizioniCount() + "\n");
-                            textArea.append("Organizzatore: " + hack.getOrganizzatore() + "\n");
+                           textArea.append("Max Grandezza Team: " + hack.getMaxGrandezzaTeam() + "\n");
+                           textArea.append("Data Inizio: " + hack.getInizio() + "\n");
+                           textArea.append("Inizio Iscrizioni: " + hack.getInizioIscrizioni() + "\n");
+                           textArea.append("Fine Iscrizioni: " + hack.getFineIscrizioni() + "\n");
+                           textArea.append("Organizzatore: " + hack.getOrganizzatore() + "\n");
                            textArea.append("-------------------------------------\n");
                        }
                    }
+
                }
 
            });
 
-    }
+            dashboardOrganizzatore.getInvitaGiudiciButton().addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    dashboardOrganizzatore.getPannelloLogico().setVisible(true);
+                    dashboardOrganizzatore.getScrollPaneVisualizza().setVisible(true);
+                    dashboardOrganizzatore.getAreaDiTesto().setVisible(true);
+                    dashboardOrganizzatore.getFieldScrittura().setVisible(true);
+                    dashboardOrganizzatore.getAvantiButton().setVisible(true);
+                    dashboardOrganizzatore.getIndietroButton().setVisible(true);
+                    dashboardOrganizzatore.getCreateButton().setVisible(false);
+                    dashboardOrganizzatore.getMessaggioErroreOrg().setVisible(true);
+                    passoCreazione = 0;
+                    datiHackaton.clear();
+
+                    // Popola la textArea con la lista degli hackathon dell’organizzatore
+                    JTextArea textArea = dashboardOrganizzatore.getTextAreaVisualizza();
+                    JScrollPane scrollPane = dashboardOrganizzatore.getScrollPaneVisualizza();
+                    textArea.setEditable(false);
+                    textArea.setFocusable(false);
+                    textArea.setText("");
+                    Color sfondo = dashboardOrganizzatore.getPannelloLogico().getBackground();
+                    textArea.setBackground(sfondo);
+                    textArea.setForeground(Color.WHITE);
+                    scrollPane.getViewport().setBackground(sfondo);
+                    scrollPane.setBorder(null);
+                    dashboardOrganizzatore.getScrollPaneVisualizza().setVisible(true);
+
+
+                    if (listaHackathon.isEmpty()) {
+                        textArea.setText("Nessun hackathon è stato ancora creato.");
+                    } else {
+                        textArea.append("--- I tuoi Hackathon ---\n\n");
+                        for (Hackathon hack : listaHackathon) {
+                            // Mostra solo gli hackathon appartenenti all'organizzatore corrente
+                            if (hack.getOrganizzatore().equals(organizzatore.getMail())) {
+                                textArea.append("Titolo: " + hack.getTitolo() + "\n");
+                                textArea.append("Sede: " + hack.getSede() + "\n");
+                                textArea.append("Max Partecipanti: " + hack.getMaxPartecipanti() + "\n");
+                                textArea.append("Max Grandezza Team: " + hack.getMaxGrandezzaTeam() + "\n");
+                                textArea.append("Data Inizio: " + hack.getInizio() + "\n");
+                                textArea.append("Inizio Iscrizioni: " + hack.getInizioIscrizioni() + "\n");
+                                textArea.append("Fine Iscrizioni: " + hack.getFineIscrizioni() + "\n");
+                                textArea.append("-------------------------------------\n");
+                            }
+                        }
+                    }
+
+                    // Inizializza il flusso di invito giudici
+                    datiInvitoGiudice = new ArrayList<>();
+                    passoInvitoGiudice = 0;
+                    hackathonSelezionato = null;
+                    // Aggiorna le etichette e i campi per lo step 0
+                    gestisciPannelloLogicoInvitoGiudice();
+                }
+            });
+
+
+
+
+
+
+        }
                 private boolean isDateValid(String date) {
                     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
                     sdf.setLenient(false);
@@ -449,4 +643,52 @@ public class Controller {
                     creaBtn.setVisible(true);
                 }
             }
+    private void gestisciPannelloLogicoInvitoGiudice() {
+
+        JLabel labelIstruzioni = dashboardOrganizzatore.getAreaDiTesto();
+        JLabel labelInput = dashboardOrganizzatore.getMessaggioErroreOrg();
+        JTextField inputField = dashboardOrganizzatore.getFieldScrittura();
+        JButton avantiBtn = dashboardOrganizzatore.getAvantiButton();
+        JButton indietroBtn = dashboardOrganizzatore.getIndietroButton();
+        JButton creaBtn = dashboardOrganizzatore.getCreateButton();
+
+
+        labelInput.setForeground(Color.WHITE);
+        inputField.setText("");
+        inputField.requestFocusInWindow();
+
+        indietroBtn.setVisible(passoInvitoGiudice > 0);
+        avantiBtn.setVisible(true);
+        creaBtn.setVisible(false);
+
+
+        String[] etichetteCampi = {"Hackathon:", "Email Giudice:"};
+        String[] domande = {
+                "Inserisci il titolo dell'hackathon.",
+                "Inserisci l'email del giudice."
+        };
+
+        String formText = "<html>Invito Giudice<br><br>";
+        for (int i = 0; i < etichetteCampi.length; i++) {
+            formText += etichetteCampi[i] + " ";
+            if (i < datiInvitoGiudice.size()) {
+                formText += datiInvitoGiudice.get(i);
+            }
+            formText += "<br>";
+        }
+        formText += "</html>";
+        labelIstruzioni.setText(formText);
+
+
+        if (passoInvitoGiudice < domande.length) {
+            labelInput.setText(domande[passoInvitoGiudice]);
+        } else {
+
+            labelInput.setText("Clicca 'Invita' per confermare.");
+            avantiBtn.setVisible(false);
+            creaBtn.setVisible(true);
+            creaBtn.setText("Invita");
+        }
     }
+
+}

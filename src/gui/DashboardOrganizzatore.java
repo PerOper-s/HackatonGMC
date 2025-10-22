@@ -107,7 +107,7 @@ public class DashboardOrganizzatore {
         panel1.setVisible(false);
         pannelloBottoni.add(panel1, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         pannelloLogic = new JPanel();
-        pannelloLogic.setLayout(new GridLayoutManager(7, 4, new Insets(15, 15, 15, 15), -1, -1));
+        pannelloLogic.setLayout(new GridLayoutManager(7, 5, new Insets(15, 15, 15, 15), -1, -1));
         pannelloLogic.setBackground(new Color(-14540254));
         pannelloLogic.setEnabled(true);
         pannelloLogic.setForeground(new Color(-13947600));
@@ -122,7 +122,7 @@ public class DashboardOrganizzatore {
         avantiButton.setFocusable(true);
         avantiButton.setForeground(new Color(-1));
         avantiButton.setText("Avanti");
-        pannelloLogic.add(avantiButton, new GridConstraints(1, 3, 4, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, 25), new Dimension(100, 25), new Dimension(100, 25), 0, false));
+        pannelloLogic.add(avantiButton, new GridConstraints(1, 4, 4, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, 25), new Dimension(100, 25), new Dimension(100, 25), 0, false));
         indietroButton = new JButton();
         indietroButton.setBackground(new Color(-13877680));
         indietroButton.setFocusable(true);
@@ -134,25 +134,25 @@ public class DashboardOrganizzatore {
         fieldScrittura.setFocusable(true);
         fieldScrittura.setForeground(new Color(-1));
         fieldScrittura.setSelectedTextColor(new Color(-1));
-        pannelloLogic.add(fieldScrittura, new GridConstraints(4, 1, 1, 2, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(300, 30), new Dimension(300, 30), new Dimension(300, 30), 0, false));
+        pannelloLogic.add(fieldScrittura, new GridConstraints(4, 2, 1, 2, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(300, 30), new Dimension(300, 30), new Dimension(300, 30), 0, false));
         createButton = new JButton();
         createButton.setBackground(new Color(-13877680));
         createButton.setForeground(new Color(-1));
         createButton.setText("Crea");
         createButton.setVisible(false);
-        pannelloLogic.add(createButton, new GridConstraints(5, 1, 1, 2, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, 25), new Dimension(100, 25), new Dimension(100, 25), 0, false));
+        pannelloLogic.add(createButton, new GridConstraints(5, 2, 1, 2, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, 25), new Dimension(100, 25), new Dimension(100, 25), 0, false));
         messaggioErroreOrg = new JLabel();
         messaggioErroreOrg.setFocusable(true);
         messaggioErroreOrg.setText("Label");
-        pannelloLogic.add(messaggioErroreOrg, new GridConstraints(3, 1, 1, 2, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pannelloLogic.add(messaggioErroreOrg, new GridConstraints(3, 2, 1, 2, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
-        pannelloLogic.add(spacer2, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        pannelloLogic.add(spacer2, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final Spacer spacer3 = new Spacer();
-        pannelloLogic.add(spacer3, new GridConstraints(6, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        pannelloLogic.add(spacer3, new GridConstraints(6, 2, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final Spacer spacer4 = new Spacer();
         pannelloLogic.add(spacer4, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer5 = new Spacer();
-        pannelloLogic.add(spacer5, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        pannelloLogic.add(spacer5, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         AreaDiTesto = new JLabel();
         AreaDiTesto.setBackground(new Color(-10658467));
         AreaDiTesto.setFocusable(true);
@@ -160,7 +160,7 @@ public class DashboardOrganizzatore {
         if (AreaDiTestoFont != null) AreaDiTesto.setFont(AreaDiTestoFont);
         AreaDiTesto.setForeground(new Color(-1));
         AreaDiTesto.setText("Label");
-        pannelloLogic.add(AreaDiTesto, new GridConstraints(1, 1, 1, 2, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pannelloLogic.add(AreaDiTesto, new GridConstraints(1, 2, 1, 2, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         scrollPaneVisualizza = new JScrollPane();
         scrollPaneVisualizza.setFocusable(true);
         Font scrollPaneVisualizzaFont = this.$$$getFont$$$("Inter", -1, 14, scrollPaneVisualizza.getFont());
@@ -175,9 +175,11 @@ public class DashboardOrganizzatore {
         textAreaVisualizza.setForeground(new Color(-1));
         scrollPaneVisualizza.setViewportView(textAreaVisualizza);
         final Spacer spacer6 = new Spacer();
-        dashboardOrganizzatore.add(spacer6, BorderLayout.NORTH);
+        pannelloLogic.add(spacer6, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer7 = new Spacer();
-        dashboardOrganizzatore.add(spacer7, BorderLayout.SOUTH);
+        dashboardOrganizzatore.add(spacer7, BorderLayout.NORTH);
+        final Spacer spacer8 = new Spacer();
+        dashboardOrganizzatore.add(spacer8, BorderLayout.SOUTH);
     }
 
     /**
@@ -269,5 +271,10 @@ public class DashboardOrganizzatore {
     public JTextArea getTextAreaVisualizza() {
         return textAreaVisualizza;
     }
+
 }
+
+
+
+
 
