@@ -246,47 +246,50 @@ public class Controller {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     // Flusso INVITO GIUDICE
+                    // Dentro l'handler del pulsante "Create" quando passoInvitoGiudice >= 0
                     if (passoInvitoGiudice >= 0 && datiInvitoGiudice.size() == 2) {
-                        // 1. Estrazione dei dati di invito (titolo hackathon e email del giudice)
                         String titolo = datiInvitoGiudice.get(0);
                         String emailGiudice = datiInvitoGiudice.get(1);
 
-                        // 2. Ricerca dell'hackathon corrispondente (deve appartenere all'organizzatore corrente)
+                        // Individua l'hackathon *dalla lista DB* già caricata
                         Hackathon selezionato = null;
                         for (Hackathon h : listaHackathon) {
-                            if (h.getTitolo().equalsIgnoreCase(titolo)
-                                    && h.getOrganizzatore().equals(organizzatore.getMail())) {
+                            if (h.getTitolo().equalsIgnoreCase(titolo) &&
+                                    h.getOrganizzatore().equals(organizzatore.getMail())) {
                                 selezionato = h;
                                 break;
                             }
                         }
                         if (selezionato == null) {
-                            // Hackathon non trovata o non di proprietà dell'organizzatore: mostra un messaggio di errore
-                            JOptionPane.showMessageDialog(frame2, "Hackathon non trovata o non appartiene all'organizzatore.", "Errore", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(frame2, "Hackathon inesistente o non tua.", "Errore", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
 
-                        // 3. Controlla che il giudice non sia già stato invitato a questa hackathon
-                        for (Giudice giudiceInvitato : selezionato.getGiudiciInvitati()) {
-                            if (giudiceInvitato.getMail().equalsIgnoreCase(emailGiudice)) {
-                                JOptionPane.showMessageDialog(frame2, "Giudice già invitato.", "Attenzione", JOptionPane.WARNING_MESSAGE);
-                                return;
-                            }
+                        HackathonDAO dao = new HackathonDAOImpl();
+
+                        // === NEW: controllo duplicati su DB ===
+                        List<String> giaInvitati = dao.listaGiudiciInvitati(titolo, organizzatore.getMail());
+                        if (giaInvitati.stream().anyMatch(s -> s.equalsIgnoreCase(emailGiudice))) {
+                            JOptionPane.showMessageDialog(frame2, "Giudice già invitato a \"" + titolo + "\".", "Attenzione", JOptionPane.WARNING_MESSAGE);
+                            return;
                         }
 
-                        // 4. Se tutto è valido, esegue l'invito del giudice tramite il metodo dell'organizzatore
-                        Giudice nuovoGiudice = new Giudice(emailGiudice);
-                        organizzatore.invitaGiudici(nuovoGiudice, selezionato);  // chiamata al metodo del model
-                        JOptionPane.showMessageDialog(frame2, "Giudice invitato con successo a " + titolo + "!", "Successo", JOptionPane.INFORMATION_MESSAGE);
+                        // === NEW: persistenza invito ===
+                        dao.invitaGiudice(titolo, organizzatore.getMail(), emailGiudice);
 
-                        // 5. Reset dell'interfaccia (pannello logico) dopo l'invito
-                        dashboardOrganizzatore.getPannelloLogico().setVisible(false);
-                        datiInvitoGiudice.clear();
+                        // (facoltativo ma utile) aggiorna anche il model in RAM per coerenza runtime
+                        Giudice nuovoGiudice = new Giudice(emailGiudice);
+                        organizzatore.invitaGiudici(nuovoGiudice, selezionato);
+
+                        JOptionPane.showMessageDialog(frame2, "Giudice " + emailGiudice + " invitato a \"" + titolo + "\"!", "Successo", JOptionPane.INFORMATION_MESSAGE);
+
+                        // reset del mini‑wizard
                         passoInvitoGiudice = -1;
+                        datiInvitoGiudice.clear();
                         dashboardOrganizzatore.getFieldScrittura().setText("");
-                        dashboardOrganizzatore.getMessaggioErroreOrg().setText("");
-                        return;
+                        gestisciPannelloLogicoInvitoGiudice();
                     }
+
 
                     // Flusso CREAZIONE HACKATHON (parte esistente)
                     if (passoCreazione == 7) {
@@ -522,8 +525,8 @@ public class Controller {
            });
 
             dashboardOrganizzatore.getInvitaGiudiciButton().addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
+                @Override public void actionPerformed(ActionEvent e) {
+                    // Mostra i pannelli necessari
                     dashboardOrganizzatore.getPannelloLogico().setVisible(true);
                     dashboardOrganizzatore.getScrollPaneVisualizza().setVisible(true);
                     dashboardOrganizzatore.getAreaDiTesto().setVisible(true);
@@ -532,10 +535,13 @@ public class Controller {
                     dashboardOrganizzatore.getIndietroButton().setVisible(true);
                     dashboardOrganizzatore.getCreateButton().setVisible(false);
                     dashboardOrganizzatore.getMessaggioErroreOrg().setVisible(true);
-                    passoCreazione = 0;
-                    datiHackaton.clear();
 
-                    // Popola la textArea con la lista degli hackathon dell’organizzatore
+                    // === NEW: carico "I tuoi hackathon" dal DB e li mostro SOLO come titoli ===
+                    HackathonDAO dao = new HackathonDAOImpl();
+                    List<Hackathon> miei = dao.findByOrganizzatore(organizzatore.getMail());
+                    listaHackathon.clear();
+                    listaHackathon.addAll(miei); // così il passo 0 del wizard verifica contro questa lista
+
                     JTextArea textArea = dashboardOrganizzatore.getTextAreaVisualizza();
                     JScrollPane scrollPane = dashboardOrganizzatore.getScrollPaneVisualizza();
                     textArea.setEditable(false);
@@ -546,36 +552,24 @@ public class Controller {
                     textArea.setForeground(Color.WHITE);
                     scrollPane.getViewport().setBackground(sfondo);
                     scrollPane.setBorder(null);
-                    dashboardOrganizzatore.getScrollPaneVisualizza().setVisible(true);
 
-
-                    if (listaHackathon.isEmpty()) {
-                        textArea.setText("Nessun hackathon è stato ancora creato.");
+                    if (miei.isEmpty()) {
+                        textArea.setText("Non hai ancora creato hackathon.");
                     } else {
                         textArea.append("--- I tuoi Hackathon ---\n\n");
-                        for (Hackathon hack : listaHackathon) {
-                            // Mostra solo gli hackathon appartenenti all'organizzatore corrente
-                            if (hack.getOrganizzatore().equals(organizzatore.getMail())) {
-                                textArea.append("Titolo: " + hack.getTitolo() + "\n");
-                                textArea.append("Sede: " + hack.getSede() + "\n");
-                                textArea.append("Max Partecipanti: " + hack.getMaxPartecipanti() + "\n");
-                                textArea.append("Max Grandezza Team: " + hack.getMaxGrandezzaTeam() + "\n");
-                                textArea.append("Data Inizio: " + hack.getInizio() + "\n");
-                                textArea.append("Inizio Iscrizioni: " + hack.getInizioIscrizioni() + "\n");
-                                textArea.append("Fine Iscrizioni: " + hack.getFineIscrizioni() + "\n");
-                                textArea.append("-------------------------------------\n");
-                            }
+                        for (Hackathon h : miei) {
+                            textArea.append(h.getTitolo() + "\n");      // SOLO TITOLO
                         }
                     }
 
-                    // Inizializza il flusso di invito giudici
+                    // (ri)inizializza il wizard di invito
                     datiInvitoGiudice = new ArrayList<>();
                     passoInvitoGiudice = 0;
                     hackathonSelezionato = null;
-                    // Aggiorna le etichette e i campi per lo step 0
                     gestisciPannelloLogicoInvitoGiudice();
                 }
             });
+
 
 
 
@@ -643,6 +637,8 @@ public class Controller {
                     creaBtn.setVisible(true);
                 }
             }
+
+            
     private void gestisciPannelloLogicoInvitoGiudice() {
 
         JLabel labelIstruzioni = dashboardOrganizzatore.getAreaDiTesto();

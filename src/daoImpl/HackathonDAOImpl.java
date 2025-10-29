@@ -4,15 +4,12 @@ import dao.HackathonDAO;
 import database.Database;
 import model.Hackathon;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Date;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.ResultSet;
+
 import model.Organizzatore;
 
 public class HackathonDAOImpl implements HackathonDAO {
@@ -108,5 +105,68 @@ public class HackathonDAOImpl implements HackathonDAO {
     }
 
 
+    @Override
+    public void invitaGiudice(String titoloHackathon, String organizzatoreEmail, String giudiceEmail) {
+        // 1) Assicura tabella
+        final String ddl = """
+            CREATE TABLE IF NOT EXISTS invito_giudice (
+              hackathon_titolo     VARCHAR NOT NULL,
+              organizzatore_email  VARCHAR NOT NULL,
+              giudice_email        VARCHAR NOT NULL
+            )
+            """;
+        try (Connection c = Database.getConnection(); Statement st = c.createStatement()) {
+            st.executeUpdate(ddl);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 2) Evita duplicati
+        final String check = "SELECT 1 FROM invito_giudice WHERE hackathon_titolo=? AND organizzatore_email=? AND giudice_email=?";
+        try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(check)) {
+            ps.setString(1, titoloHackathon);
+            ps.setString(2, organizzatoreEmail);
+            ps.setString(3, giudiceEmail);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return; // già invitato, esci silenziosamente
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 3) Inserisce invito
+        final String insert = "INSERT INTO invito_giudice (hackathon_titolo, organizzatore_email, giudice_email) VALUES (?,?,?)";
+        try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(insert)) {
+            ps.setString(1, titoloHackathon);
+            ps.setString(2, organizzatoreEmail);
+            ps.setString(3, giudiceEmail);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // === NEW: lista giudici invitati ===
+    @Override
+    public List<String> listaGiudiciInvitati(String titoloHackathon, String organizzatoreEmail) {
+        final String sql = "SELECT giudice_email FROM invito_giudice WHERE hackathon_titolo=? AND organizzatore_email=?";
+        List<String> emails = new ArrayList<>();
+        try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, titoloHackathon);
+            ps.setString(2, organizzatoreEmail);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    emails.add(rs.getString("giudice_email"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return emails;
+    }
 }
+
+
 
