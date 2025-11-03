@@ -202,7 +202,20 @@ public class Controller {
                     JLabel labelInput = dashboardOrganizzatore.getMessaggioErroreOrg();
                     labelInput.setForeground(Color.WHITE);
 
-                    String[] domande = {
+                    // ---> INVITA GIUDICI: usa le sue domande
+                    if (passoInvitoGiudice >= 0) {
+                        String[] domandeInvito = {
+                                "Inserisci il titolo dell'hackathon.",
+                                "Inserisci l'email del giudice."
+                        };
+                        if (passoInvitoGiudice < domandeInvito.length) {
+                            labelInput.setText(domandeInvito[passoInvitoGiudice]);
+                        }
+                        return;
+                    }
+
+                    // ---> CREA HACKATHON: domande originali
+                    String[] domandeCrea = {
                             "Inserisci il titolo.",
                             "Inserisci la sede.",
                             "Inserisci il n° max di partecipanti.",
@@ -211,16 +224,15 @@ public class Controller {
                             "Data inizio iscrizioni (GG/MM/AAAA).",
                             "Data fine iscrizioni (GG/MM/AAAA)."
                     };
-
-                    if (passoCreazione < domande.length) {
-                        labelInput.setText(domande[passoCreazione]);
+                    if (passoCreazione < domandeCrea.length) {
+                        labelInput.setText(domandeCrea[passoCreazione]);
                     }
                 }
 
                 @Override
-                public void focusLost(FocusEvent e) {
-                }
+                public void focusLost(FocusEvent e) { /* no-op */ }
             });
+
 
             dashboardOrganizzatore.getCreaHackaton().addActionListener(new ActionListener() {
                 @Override
@@ -341,45 +353,39 @@ public class Controller {
                 public void actionPerformed(ActionEvent e) {
                     String inputUtente = dashboardOrganizzatore.getFieldScrittura().getText().trim();
 
-                    // Campo vuoto → errore
                     if (inputUtente.isEmpty()) {
                         dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
                         dashboardOrganizzatore.getMessaggioErroreOrg().setText("Il campo non può essere vuoto.");
                         return;
                     }
 
-                    // === Flusso INVITO GIUDICE attivo? ===
+                    // === INVITA GIUDICE ===
                     if (passoInvitoGiudice >= 0) {
                         if (passoInvitoGiudice == 0) {
-                            // Step 0: verifica che il titolo esista tra i TUOI hackathon
+                            // valida titolo ∈ tuoi hackathon
                             Hackathon scelto = null;
                             for (Hackathon h : listaHackathon) {
                                 if (h.getTitolo().equalsIgnoreCase(inputUtente) &&
-                                        h.getOrganizzatore().equals(organizzatore.getMail())) {
-                                    scelto = h; break;
-                                }
+                                        h.getOrganizzatore().equals(organizzatore.getMail())) { scelto = h; break; }
                             }
                             if (scelto == null) {
                                 dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
                                 dashboardOrganizzatore.getMessaggioErroreOrg().setText("Hackathon non trovata o non appartiene all'organizzatore.");
                                 return;
                             }
-                            // ok → memorizza titolo e passa allo step 1 (email giudice)
                             if (datiInvitoGiudice.size() == 0) datiInvitoGiudice.add(inputUtente);
                             else datiInvitoGiudice.set(0, inputUtente);
 
-                            // Riepilogo live + guida step successivo
-                            gestisciPannelloLogicoInvitoGiudice();
-                            dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(Color.WHITE);
-                            dashboardOrganizzatore.getMessaggioErroreOrg().setText("Inserisci la email del giudice da invitare");
-
                             passoInvitoGiudice = 1;
                             dashboardOrganizzatore.getFieldScrittura().setText("");
+
+                            // guida/riepilogo: delega al pannello logico
+                            dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(Color.WHITE);
+                            gestisciPannelloLogicoInvitoGiudice();
                             return;
                         }
 
                         if (passoInvitoGiudice == 1) {
-                            // Step 1: valida email + "Giudice non esistente"
                             String emailGiudice = inputUtente;
                             String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
                             if (!emailGiudice.matches(emailRegex)) {
@@ -387,7 +393,7 @@ public class Controller {
                                 dashboardOrganizzatore.getMessaggioErroreOrg().setText("Formato email non valido.");
                                 return;
                             }
-                            // Controllo su DB che esista un utente con ruolo 'giudice'
+                            // GIUDICE ESISTENTE
                             UtenteDAO udao = new UtenteDAOImpl();
                             boolean esisteGiudice = udao.esisteUtente(emailGiudice, "giudice");
                             if (!esisteGiudice) {
@@ -395,22 +401,24 @@ public class Controller {
                                 dashboardOrganizzatore.getMessaggioErroreOrg().setText("Giudice non esistente: registrare l'utente con ruolo 'giudice'.");
                                 return;
                             }
-                            // ok → memorizza email
+
                             if (datiInvitoGiudice.size() == 1) datiInvitoGiudice.add(emailGiudice);
                             else if (datiInvitoGiudice.size() >= 2) datiInvitoGiudice.set(1, emailGiudice);
 
-                            // Porta il wizard allo stato "conferma" (step 2) e aggiorna la maschera
-                            passoInvitoGiudice = 2;
-                            gestisciPannelloLogicoInvitoGiudice(); // qui AreaDiTesto mostra titolo+email e bottone "Invita"
+                            passoInvitoGiudice = 2; // stato conferma ("Invita")
                             dashboardOrganizzatore.getFieldScrittura().setText("");
+
+                            // guida/riepilogo: delega al pannello logico (mostrerà 'Invita')
+                            dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(Color.WHITE);
+                            gestisciPannelloLogicoInvitoGiudice();
                             return;
                         }
 
-                        // Se per qualche motivo si preme Avanti quando è già in stato conferma, non fare nulla.
+                        // se si preme Avanti in stato conferma, ignora
                         return;
                     }
 
-                    // === Altrimenti: flusso CREAZIONE HACKATHON (già esistente) ===
+                    // === CREA HACKATHON (codice esistente, invariato) ===
                     if ((passoCreazione == 2 || passoCreazione == 3) && !inputUtente.matches("\\d+")) {
                         dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
                         dashboardOrganizzatore.getMessaggioErroreOrg().setText("Errore: inserisci un valore numerico.");
@@ -458,11 +466,8 @@ public class Controller {
                                 return;
                             }
                         }
-                    } catch (ParseException ex) {
-                        return;
-                    }
+                    } catch (ParseException ex) { return; }
 
-                    // Salva e avanza (creazione hackathon)
                     datiHackaton.add(inputUtente);
                     passoCreazione++;
                     gestisciPannelloLogicoDashboardOrganizzatore();
@@ -471,24 +476,23 @@ public class Controller {
 
 
 
+
             dashboardOrganizzatore.getIndietroButton().addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (passoInvitoGiudice >= 0) {
-                        // Flusso invito giudici
                         if (passoInvitoGiudice > 0) {
-                            // ripristina ultimo dato e torna indietro
                             int lastIndex = datiInvitoGiudice.size() - 1;
                             String valorePrecedente = "";
-                            if (lastIndex >= 0) {
-                                valorePrecedente = datiInvitoGiudice.remove(lastIndex);
-                            }
+                            if (lastIndex >= 0) valorePrecedente = datiInvitoGiudice.remove(lastIndex);
                             passoInvitoGiudice--;
-                            gestisciPannelloLogicoInvitoGiudice(); // aggiorna guida/riepilogo/bottoni
-                            dashboardOrganizzatore.getFieldScrittura().setText(valorePrecedente);
+
+                            // reset eventuale rosso e delega a pannello logico per guida/riepilogo
                             dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(Color.WHITE);
+                            gestisciPannelloLogicoInvitoGiudice();
+
+                            dashboardOrganizzatore.getFieldScrittura().setText(valorePrecedente);
                         } else {
-                            // passoInvitoGiudice == 0 → esci dal mini-wizard inviti
                             dashboardOrganizzatore.getPannelloLogico().setVisible(false);
                             passoInvitoGiudice = -1;
                             datiInvitoGiudice.clear();
@@ -496,7 +500,7 @@ public class Controller {
                         return;
                     }
 
-                    // Flusso creazione hackathon (già esistente)
+                    // CREA HACKATHON (esistente)
                     if (passoCreazione > 0) {
                         String valorePrecedente = datiHackaton.get(datiHackaton.size() - 1);
                         datiHackaton.remove(datiHackaton.size() - 1);
@@ -506,6 +510,7 @@ public class Controller {
                     }
                 }
             });
+
 
 
 
@@ -526,6 +531,10 @@ public class Controller {
                    textArea.setEditable(false);
                    textArea.setFocusable(false);
                    textArea.setText(""); // Pulisci l'area di testo
+                   textArea.setLineWrap(true);
+                   textArea.setWrapStyleWord(true);
+                   scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                   scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
                    Color coloreSfondo = dashboardOrganizzatore.getPannelloLogico().getBackground();
 
                    textArea.setEditable(false);
@@ -560,7 +569,7 @@ public class Controller {
 
             dashboardOrganizzatore.getInvitaGiudiciButton().addActionListener(new ActionListener() {
                 @Override public void actionPerformed(ActionEvent e) {
-                    // Mostra i pannelli necessari
+                    // mostra i pannelli necessari
                     dashboardOrganizzatore.getPannelloLogico().setVisible(true);
                     dashboardOrganizzatore.getScrollPaneVisualizza().setVisible(true);
                     dashboardOrganizzatore.getAreaDiTesto().setVisible(true);
@@ -569,10 +578,13 @@ public class Controller {
                     dashboardOrganizzatore.getIndietroButton().setVisible(true);
                     dashboardOrganizzatore.getCreateButton().setVisible(false);
                     dashboardOrganizzatore.getMessaggioErroreOrg().setVisible(true);
-                    dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(Color.WHITE);
-                    dashboardOrganizzatore.getMessaggioErroreOrg().setText("Inserisci il titolo del tuo hackathon");
+                    
 
-                    // Carico "I tuoi hackathon" dal DB e li mostro SOLO come titoli
+                    // stile guida
+                    JLabel guida = dashboardOrganizzatore.getMessaggioErroreOrg();
+                    guida.setForeground(Color.WHITE);
+
+                    // carica SOLO i titoli dei tuoi hackathon
                     HackathonDAO dao = new HackathonDAOImpl();
                     List<Hackathon> miei = dao.findByOrganizzatore(organizzatore.getMail());
                     listaHackathon.clear();
@@ -580,9 +592,17 @@ public class Controller {
 
                     JTextArea textArea = dashboardOrganizzatore.getTextAreaVisualizza();
                     JScrollPane scrollPane = dashboardOrganizzatore.getScrollPaneVisualizza();
+
                     textArea.setEditable(false);
                     textArea.setFocusable(false);
                     textArea.setText("");
+
+                    // evita barre inutili
+                    textArea.setLineWrap(true);
+                    textArea.setWrapStyleWord(true);
+                    scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                    scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+
                     Color sfondo = dashboardOrganizzatore.getPannelloLogico().getBackground();
                     textArea.setBackground(sfondo);
                     textArea.setForeground(Color.WHITE);
@@ -593,19 +613,17 @@ public class Controller {
                         textArea.setText("Non hai ancora creato hackathon.");
                     } else {
                         textArea.append("--- I tuoi Hackathon ---\n\n");
-                        for (Hackathon h : miei) {
-                            textArea.append(h.getTitolo() + "\n");  // SOLO TITOLO
-                        }
+                        for (Hackathon h : miei) textArea.append(h.getTitolo() + "\n");
                     }
 
-                    // (ri)inizializza il mini-wizard invito
+                    // (ri)inizializza il mini-wizard
                     datiInvitoGiudice = new ArrayList<>();
                     passoInvitoGiudice = 0;
                     hackathonSelezionato = null;
-
-                    // Aggiorna la maschera (AreaDiTesto in alto con il riepilogo)
-                    gestisciPannelloLogicoInvitoGiudice();
                     dashboardOrganizzatore.getFieldScrittura().setText("");
+
+                    // lascia che sia il pannello logico a impostare guida e riepilogo
+                    gestisciPannelloLogicoInvitoGiudice();
                 }
             });
 
