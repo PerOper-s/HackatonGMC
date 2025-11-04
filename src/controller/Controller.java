@@ -370,7 +370,7 @@ public class Controller {
                             }
                             if (scelto == null) {
                                 dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Hackathon non trovata o non appartiene all'organizzatore.");
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("<html>Hackathon non trovata<br>o non appartiene all'organizzatore.</html>");
                                 return;
                             }
                             if (datiInvitoGiudice.size() == 0) datiInvitoGiudice.add(inputUtente);
@@ -398,7 +398,7 @@ public class Controller {
                             boolean esisteGiudice = udao.esisteUtente(emailGiudice, "giudice");
                             if (!esisteGiudice) {
                                 dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Giudice non esistente: registrare l'utente con ruolo 'giudice'.");
+                                dashboardOrganizzatore.getMessaggioErroreOrg().setText("Giudice non esistente");
                                 return;
                             }
 

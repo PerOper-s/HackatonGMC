@@ -144,7 +144,7 @@ public class DashboardOrganizzatore {
         messaggioErroreOrg = new JLabel();
         messaggioErroreOrg.setFocusable(true);
         messaggioErroreOrg.setText("Label");
-        pannelloLogic.add(messaggioErroreOrg, new GridConstraints(3, 2, 1, 2, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pannelloLogic.add(messaggioErroreOrg, new GridConstraints(3, 2, 1, 2, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, new Dimension(300, 150), 0, false));
         final Spacer spacer2 = new Spacer();
         pannelloLogic.add(spacer2, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final Spacer spacer3 = new Spacer();
@@ -167,7 +167,7 @@ public class DashboardOrganizzatore {
         if (scrollPaneVisualizzaFont != null) scrollPaneVisualizza.setFont(scrollPaneVisualizzaFont);
         scrollPaneVisualizza.setForeground(new Color(-1));
         scrollPaneVisualizza.setVisible(false);
-        pannelloLogic.add(scrollPaneVisualizza, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        pannelloLogic.add(scrollPaneVisualizza, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(150, 400), new Dimension(150, 400), null, 0, false));
         textAreaVisualizza = new JTextArea();
         textAreaVisualizza.setFocusable(true);
         Font textAreaVisualizzaFont = this.$$$getFont$$$("Inter", -1, 14, textAreaVisualizza.getFont());
