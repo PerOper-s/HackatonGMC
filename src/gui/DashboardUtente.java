@@ -5,6 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.text.StyleContext;
 import java.awt.*;
@@ -14,6 +15,13 @@ public class DashboardUtente {
 
     private JPanel dashboardUtente;
     private JLabel messaggioBenvenuto;
+    private JPanel pannelloBottoni;
+    private JButton hackatonDisponibili;
+    private JButton invitaGiudiciButton;
+    private JButton visualizzaHackaton;
+    private JPanel pannelloLogic;
+    private JScrollPane scrollPaneVisualizza;
+    private JTextArea textAreaVisualizza;
 
     public DashboardUtente(String emailUtente) {
 
@@ -35,20 +43,92 @@ public class DashboardUtente {
      */
     private void $$$setupUI$$$() {
         dashboardUtente = new JPanel();
-        dashboardUtente.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        dashboardUtente.setLayout(new BorderLayout(0, 0));
         dashboardUtente.setBackground(new Color(-15918294));
-        dashboardUtente.setEnabled(false);
+        dashboardUtente.setEnabled(true);
         dashboardUtente.setFocusCycleRoot(false);
-        dashboardUtente.setMinimumSize(new Dimension(700, 500));
-        dashboardUtente.setPreferredSize(new Dimension(700, 500));
+        dashboardUtente.setMaximumSize(new Dimension(900, 600));
+        dashboardUtente.setMinimumSize(new Dimension(900, 600));
+        dashboardUtente.setPreferredSize(new Dimension(900, 600));
+        pannelloBottoni = new JPanel();
+        pannelloBottoni.setLayout(new GridLayoutManager(6, 1, new Insets(15, 15, 15, 15), -1, -1));
+        pannelloBottoni.setBackground(new Color(-15918294));
+        pannelloBottoni.setEnabled(true);
+        dashboardUtente.add(pannelloBottoni, BorderLayout.EAST);
+        pannelloBottoni.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-16777216)), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        final Spacer spacer1 = new Spacer();
+        pannelloBottoni.add(spacer1, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        hackatonDisponibili = new JButton();
+        hackatonDisponibili.setBackground(new Color(-13877680));
+        hackatonDisponibili.setFocusable(false);
+        Font hackatonDisponibiliFont = this.$$$getFont$$$("Inter", -1, -1, hackatonDisponibili.getFont());
+        if (hackatonDisponibiliFont != null) hackatonDisponibili.setFont(hackatonDisponibiliFont);
+        hackatonDisponibili.setForeground(new Color(-1));
+        hackatonDisponibili.setHideActionText(false);
+        hackatonDisponibili.setHorizontalTextPosition(4);
+        hackatonDisponibili.setIconTextGap(6);
+        hackatonDisponibili.setRequestFocusEnabled(true);
+        hackatonDisponibili.setText("Hackaton Disponibili");
+        pannelloBottoni.add(hackatonDisponibili, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
+        invitaGiudiciButton = new JButton();
+        invitaGiudiciButton.setBackground(new Color(-13877680));
+        invitaGiudiciButton.setFocusable(false);
+        Font invitaGiudiciButtonFont = this.$$$getFont$$$("Inter", -1, -1, invitaGiudiciButton.getFont());
+        if (invitaGiudiciButtonFont != null) invitaGiudiciButton.setFont(invitaGiudiciButtonFont);
+        invitaGiudiciButton.setForeground(new Color(-1));
+        invitaGiudiciButton.setHorizontalTextPosition(4);
+        invitaGiudiciButton.setIconTextGap(6);
+        invitaGiudiciButton.setRequestFocusEnabled(true);
+        invitaGiudiciButton.setText("Invita Giudici");
+        pannelloBottoni.add(invitaGiudiciButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
+        visualizzaHackaton = new JButton();
+        visualizzaHackaton.setBackground(new Color(-13877680));
+        visualizzaHackaton.setFocusable(false);
+        Font visualizzaHackatonFont = this.$$$getFont$$$("Inter", -1, -1, visualizzaHackaton.getFont());
+        if (visualizzaHackatonFont != null) visualizzaHackaton.setFont(visualizzaHackatonFont);
+        visualizzaHackaton.setForeground(new Color(-1));
+        visualizzaHackaton.setHorizontalTextPosition(4);
+        visualizzaHackaton.setIconTextGap(6);
+        visualizzaHackaton.setRequestFocusEnabled(true);
+        visualizzaHackaton.setText("Visualizza Hackaton");
+        pannelloBottoni.add(visualizzaHackaton, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.setVisible(false);
+        pannelloBottoni.add(panel1, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         messaggioBenvenuto = new JLabel();
         messaggioBenvenuto.setBackground(new Color(-15918294));
-        Font messaggioBenvenutoFont = this.$$$getFont$$$("Arial", -1, 14, messaggioBenvenuto.getFont());
+        Font messaggioBenvenutoFont = this.$$$getFont$$$("Inter", -1, 11, messaggioBenvenuto.getFont());
         if (messaggioBenvenutoFont != null) messaggioBenvenuto.setFont(messaggioBenvenutoFont);
         messaggioBenvenuto.setForeground(new Color(-1));
-        messaggioBenvenuto.setIcon(new ImageIcon(getClass().getResource("/icone/icons8-user-32.png")));
+        messaggioBenvenuto.setIcon(new ImageIcon(getClass().getResource("/icone/icone bianche/icons8-user-40.png")));
         messaggioBenvenuto.setText("");
-        dashboardUtente.add(messaggioBenvenuto, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTHEAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pannelloBottoni.add(messaggioBenvenuto, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTHEAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pannelloLogic = new JPanel();
+        pannelloLogic.setLayout(new GridLayoutManager(1, 1, new Insets(15, 15, 15, 15), -1, -1));
+        pannelloLogic.setBackground(new Color(-14540254));
+        pannelloLogic.setEnabled(true);
+        pannelloLogic.setForeground(new Color(-13947600));
+        pannelloLogic.setMaximumSize(new Dimension(150, 70));
+        pannelloLogic.setMinimumSize(new Dimension(150, 70));
+        pannelloLogic.setPreferredSize(new Dimension(150, 70));
+        pannelloLogic.setVisible(false);
+        dashboardUtente.add(pannelloLogic, BorderLayout.CENTER);
+        pannelloLogic.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-16777216)), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        scrollPaneVisualizza = new JScrollPane();
+        scrollPaneVisualizza.setFocusable(true);
+        Font scrollPaneVisualizzaFont = this.$$$getFont$$$("Inter", -1, 14, scrollPaneVisualizza.getFont());
+        if (scrollPaneVisualizzaFont != null) scrollPaneVisualizza.setFont(scrollPaneVisualizzaFont);
+        scrollPaneVisualizza.setForeground(new Color(-1));
+        scrollPaneVisualizza.setVisible(false);
+        pannelloLogic.add(scrollPaneVisualizza, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(150, 400), new Dimension(150, 400), null, 0, false));
+        textAreaVisualizza = new JTextArea();
+        textAreaVisualizza.setFocusable(true);
+        Font textAreaVisualizzaFont = this.$$$getFont$$$("Inter", -1, 14, textAreaVisualizza.getFont());
+        if (textAreaVisualizzaFont != null) textAreaVisualizza.setFont(textAreaVisualizzaFont);
+        textAreaVisualizza.setForeground(new Color(-1));
+        scrollPaneVisualizza.setViewportView(textAreaVisualizza);
+        messaggioBenvenuto.setLabelFor(scrollPaneVisualizza);
     }
 
     /**
@@ -86,6 +166,23 @@ public class DashboardUtente {
 
     public JLabel getMessaggioBenvenuto() {
         return messaggioBenvenuto;
+    }
+
+
+    public JButton getHackatonDisponibili() {
+        return hackatonDisponibili;
+    }
+
+    public JPanel getPannelloLogico() {
+        return pannelloLogic;
+    }
+
+    public JScrollPane getScrollPaneVisualizza() {
+        return scrollPaneVisualizza;
+    }
+
+    public JTextArea getTextAreaVisualizza() {
+        return textAreaVisualizza;
     }
 }
 
