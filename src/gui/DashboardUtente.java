@@ -22,6 +22,12 @@ public class DashboardUtente {
     private JPanel pannelloLogic;
     private JScrollPane scrollPaneVisualizza;
     private JTextArea textAreaVisualizza;
+    private JButton avantiButton;
+    private JButton indietroButton;
+    private JTextField fieldScrittura;
+    private JButton iscrivitiButton;
+    private JLabel AreaDiTesto;
+    private JLabel messaggioErroreOrg;
 
     public DashboardUtente(String emailUtente) {
 
@@ -105,7 +111,7 @@ public class DashboardUtente {
         messaggioBenvenuto.setText("");
         pannelloBottoni.add(messaggioBenvenuto, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTHEAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         pannelloLogic = new JPanel();
-        pannelloLogic.setLayout(new GridLayoutManager(1, 1, new Insets(15, 15, 15, 15), -1, -1));
+        pannelloLogic.setLayout(new GridLayoutManager(4, 4, new Insets(15, 15, 15, 15), -1, -1));
         pannelloLogic.setBackground(new Color(-14540254));
         pannelloLogic.setEnabled(true);
         pannelloLogic.setForeground(new Color(-13947600));
@@ -115,19 +121,61 @@ public class DashboardUtente {
         pannelloLogic.setVisible(false);
         dashboardUtente.add(pannelloLogic, BorderLayout.CENTER);
         pannelloLogic.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-16777216)), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        AreaDiTesto = new JLabel();
+        AreaDiTesto.setBackground(new Color(-10658467));
+        AreaDiTesto.setFocusable(true);
+        Font AreaDiTestoFont = this.$$$getFont$$$("Inter", -1, 16, AreaDiTesto.getFont());
+        if (AreaDiTestoFont != null) AreaDiTesto.setFont(AreaDiTestoFont);
+        AreaDiTesto.setForeground(new Color(-1));
+        AreaDiTesto.setText("Label");
+        pannelloLogic.add(AreaDiTesto, new GridConstraints(0, 1, 1, 3, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         scrollPaneVisualizza = new JScrollPane();
         scrollPaneVisualizza.setFocusable(true);
         Font scrollPaneVisualizzaFont = this.$$$getFont$$$("Inter", -1, 14, scrollPaneVisualizza.getFont());
         if (scrollPaneVisualizzaFont != null) scrollPaneVisualizza.setFont(scrollPaneVisualizzaFont);
         scrollPaneVisualizza.setForeground(new Color(-1));
         scrollPaneVisualizza.setVisible(false);
-        pannelloLogic.add(scrollPaneVisualizza, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(150, 400), new Dimension(150, 400), null, 0, false));
+        pannelloLogic.add(scrollPaneVisualizza, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(250, 400), new Dimension(250, 400), new Dimension(250, 400), 0, false));
         textAreaVisualizza = new JTextArea();
         textAreaVisualizza.setFocusable(true);
         Font textAreaVisualizzaFont = this.$$$getFont$$$("Inter", -1, 14, textAreaVisualizza.getFont());
         if (textAreaVisualizzaFont != null) textAreaVisualizza.setFont(textAreaVisualizzaFont);
         textAreaVisualizza.setForeground(new Color(-1));
         scrollPaneVisualizza.setViewportView(textAreaVisualizza);
+        fieldScrittura = new JTextField();
+        fieldScrittura.setBackground(new Color(-13877680));
+        fieldScrittura.setFocusable(true);
+        fieldScrittura.setForeground(new Color(-1));
+        fieldScrittura.setSelectedTextColor(new Color(-1));
+        pannelloLogic.add(fieldScrittura, new GridConstraints(2, 1, 1, 3, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(300, 30), new Dimension(300, 30), new Dimension(300, 30), 0, false));
+        messaggioErroreOrg = new JLabel();
+        messaggioErroreOrg.setFocusable(true);
+        messaggioErroreOrg.setText("Label");
+        pannelloLogic.add(messaggioErroreOrg, new GridConstraints(1, 1, 1, 3, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, new Dimension(300, 150), 0, false));
+        indietroButton = new JButton();
+        indietroButton.setBackground(new Color(-13877680));
+        indietroButton.setFocusable(true);
+        indietroButton.setForeground(new Color(-1));
+        indietroButton.setText("Indietro");
+        pannelloLogic.add(indietroButton, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, 25), new Dimension(181, 25), new Dimension(100, 25), 1, false));
+        avantiButton = new JButton();
+        avantiButton.setBackground(new Color(-13877680));
+        avantiButton.setFocusable(true);
+        avantiButton.setForeground(new Color(-1));
+        avantiButton.setText("Avanti");
+        pannelloLogic.add(avantiButton, new GridConstraints(3, 3, 1, 1, GridConstraints.ANCHOR_SOUTHEAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, 25), new Dimension(143, 25), new Dimension(100, 25), 0, false));
+        iscrivitiButton = new JButton();
+        iscrivitiButton.setBackground(new Color(-13877680));
+        iscrivitiButton.setForeground(new Color(-1));
+        iscrivitiButton.setText("Crea");
+        iscrivitiButton.setVisible(false);
+        pannelloLogic.add(iscrivitiButton, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, 25), new Dimension(100, 25), new Dimension(100, 25), 0, false));
+        final Spacer spacer2 = new Spacer();
+        dashboardUtente.add(spacer2, BorderLayout.SOUTH);
+        final Spacer spacer3 = new Spacer();
+        dashboardUtente.add(spacer3, BorderLayout.NORTH);
+        final Spacer spacer4 = new Spacer();
+        dashboardUtente.add(spacer4, BorderLayout.WEST);
         messaggioBenvenuto.setLabelFor(scrollPaneVisualizza);
     }
 
@@ -184,5 +232,30 @@ public class DashboardUtente {
     public JTextArea getTextAreaVisualizza() {
         return textAreaVisualizza;
     }
+
+    public JButton getAvantiButton() {
+        return avantiButton;
+    }
+
+    public JButton getIndietroButton() {
+        return indietroButton;
+    }
+
+    public JTextField getFieldScrittura() {
+        return fieldScrittura;
+    }
+
+    public JButton getIscrivitiButton() {
+        return iscrivitiButton;
+    }
+
+    public JLabel getAreaDiTesto() {
+        return AreaDiTesto;
+    }
+
+    public JLabel getMessaggioErroreOrg() {
+        return messaggioErroreOrg;
+    }
+
 }
 

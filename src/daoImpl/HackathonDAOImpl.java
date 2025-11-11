@@ -166,6 +166,22 @@ public class HackathonDAOImpl implements HackathonDAO {
         }
         return emails;
     }
+
+    public Long findIdByTitolo(String titolo) {
+        String sql = "SELECT id FROM hackathon WHERE titolo = ? LIMIT 1";
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, titolo);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // non trovato
+    }
 }
 
 

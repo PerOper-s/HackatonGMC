@@ -8,6 +8,7 @@ public interface HackathonDAO {
     void creaHackathon(Hackathon h);
     List<Hackathon> findAll();
     List<Hackathon> findByOrganizzatore(String email);
+    Long findIdByTitolo(String titolo);
 
 
 
