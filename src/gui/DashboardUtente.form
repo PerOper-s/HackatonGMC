@@ -69,7 +69,7 @@
               <text value="Invita Giudici"/>
             </properties>
           </component>
-          <component id="baaad" class="javax.swing.JButton" binding="visualizzaHackaton">
+          <component id="baaad" class="javax.swing.JButton" binding="iMieiHackaton">
             <constraints>
               <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                 <minimum-size width="175" height="35"/>
@@ -85,7 +85,7 @@
               <horizontalTextPosition value="4"/>
               <iconTextGap value="6"/>
               <requestFocusEnabled value="true"/>
-              <text value="Visualizza Hackaton"/>
+              <text value="I miei Hackaton"/>
             </properties>
           </component>
           <grid id="86b81" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">

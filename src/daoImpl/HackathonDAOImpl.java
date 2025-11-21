@@ -182,6 +182,46 @@ public class HackathonDAOImpl implements HackathonDAO {
         }
         return null; // non trovato
     }
+
+    @Override
+    public List<Hackathon> findByUtenteIscritto(String emailUtente) {
+        List<Hackathon> result = new ArrayList<>();
+
+        String sql = """
+        SELECT h.*
+        FROM hackathon h
+        JOIN iscrizione i ON i.hackathon_id = h.id
+        WHERE i.utente_email = ?
+        """;
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, emailUtente);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Hackathon h = new Hackathon(
+                            rs.getString("titolo"),
+                            rs.getString("sede"),
+                            new Organizzatore(rs.getString("organizzatore_email")),
+                            rs.getInt("max_partecipanti"),
+                            rs.getInt("max_team_size"),
+                            rs.getDate("data_inizio").toLocalDate().toString(),
+                            rs.getDate("data_inizio_iscr").toLocalDate().toString(),
+                            rs.getDate("data_fine_iscr").toLocalDate().toString()
+                    );
+                    result.add(h);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
 }
 
 

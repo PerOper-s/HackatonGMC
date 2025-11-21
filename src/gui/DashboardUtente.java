@@ -18,7 +18,7 @@ public class DashboardUtente {
     private JPanel pannelloBottoni;
     private JButton hackatonDisponibili;
     private JButton invitaGiudiciButton;
-    private JButton visualizzaHackaton;
+    private JButton iMieiHackaton;
     private JPanel pannelloLogic;
     private JScrollPane scrollPaneVisualizza;
     private JTextArea textAreaVisualizza;
@@ -87,17 +87,17 @@ public class DashboardUtente {
         invitaGiudiciButton.setRequestFocusEnabled(true);
         invitaGiudiciButton.setText("Invita Giudici");
         pannelloBottoni.add(invitaGiudiciButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
-        visualizzaHackaton = new JButton();
-        visualizzaHackaton.setBackground(new Color(-13877680));
-        visualizzaHackaton.setFocusable(false);
-        Font visualizzaHackatonFont = this.$$$getFont$$$("Inter", -1, -1, visualizzaHackaton.getFont());
-        if (visualizzaHackatonFont != null) visualizzaHackaton.setFont(visualizzaHackatonFont);
-        visualizzaHackaton.setForeground(new Color(-1));
-        visualizzaHackaton.setHorizontalTextPosition(4);
-        visualizzaHackaton.setIconTextGap(6);
-        visualizzaHackaton.setRequestFocusEnabled(true);
-        visualizzaHackaton.setText("Visualizza Hackaton");
-        pannelloBottoni.add(visualizzaHackaton, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
+        iMieiHackaton = new JButton();
+        iMieiHackaton.setBackground(new Color(-13877680));
+        iMieiHackaton.setFocusable(false);
+        Font iMieiHackatonFont = this.$$$getFont$$$("Inter", -1, -1, iMieiHackaton.getFont());
+        if (iMieiHackatonFont != null) iMieiHackaton.setFont(iMieiHackatonFont);
+        iMieiHackaton.setForeground(new Color(-1));
+        iMieiHackaton.setHorizontalTextPosition(4);
+        iMieiHackaton.setIconTextGap(6);
+        iMieiHackaton.setRequestFocusEnabled(true);
+        iMieiHackaton.setText("I miei Hackaton");
+        pannelloBottoni.add(iMieiHackaton, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setVisible(false);
@@ -255,6 +255,10 @@ public class DashboardUtente {
 
     public JLabel getMessaggioErroreOrg() {
         return messaggioErroreOrg;
+    }
+
+    public JButton getIMieiHackaton() {
+        return iMieiHackaton;
     }
 
 }

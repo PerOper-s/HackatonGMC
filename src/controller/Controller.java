@@ -42,6 +42,8 @@ public class Controller {
     private Hackathon hackathonSelezionato;
     private int passoIscrizioneU = -1;
     private ArrayList<String> datiIscrizioneU = new ArrayList<>();
+    private int passoTeamU = -1;
+    private ArrayList<String> datiTeamU = new ArrayList<>();
 
 
 
@@ -187,6 +189,8 @@ public class Controller {
                 // Wizard iscrizione: step iniziale
                 passoIscrizioneU = 0;
                 datiIscrizioneU.clear();
+                passoTeamU = -1;
+                datiTeamU.clear();
                 dashboardUtente.getAreaDiTesto().setVisible(true);
                 dashboardUtente.getFieldScrittura().setVisible(true);
                 dashboardUtente.getAvantiButton().setVisible(true);
@@ -194,9 +198,8 @@ public class Controller {
                 dashboardUtente.getIscrivitiButton().setVisible(false);
                 dashboardUtente.getIscrivitiButton().setText("Iscriviti");
                 dashboardUtente.getMessaggioErroreOrg().setVisible(true);
-                dashboardUtente.getMessaggioErroreOrg().setForeground(Color.WHITE);
-                dashboardUtente.getMessaggioErroreOrg().setText("Inserisci il titolo dell'hackathon.");
-                dashboardUtente.getAreaDiTesto().setText("<html><b>Iscrizione</b><br><br><b>Titolo:</b> —</html>");
+                aggiornaGuidaDashboardUtente();
+                dashboardUtente.getAreaDiTesto().setText("<html><b>Iscrizione</b><br><br><b>Titolo:</b> —</html>");aggiornaGuidaDashboardUtente();
                 dashboardUtente.getFieldScrittura().setText("");
                 dashboardUtente.getFieldScrittura().requestFocusInWindow();
 
@@ -252,122 +255,446 @@ public class Controller {
                 scrollPane.repaint();
             });
 
+            // Focus sul campo input utente: resetta errori e rimette la guida giusta
+            JTextField inputFieldU = dashboardUtente.getFieldScrittura();
+            inputFieldU.addFocusListener(new FocusListener() {
+                @Override
+                public void focusGained(FocusEvent e) {
+                    JLabel labelInput = dashboardUtente.getMessaggioErroreOrg();
 
-
-            dashboardUtente.getAvantiButton().addActionListener(e -> {
-                if (passoIscrizioneU < 0) return; // non nel flusso iscrizione
-
-                JLabel guida = dashboardUtente.getMessaggioErroreOrg();
-                guida.setForeground(Color.WHITE);
-
-                if (passoIscrizioneU == 0) {
-                    String titoloInput = dashboardUtente.getFieldScrittura().getText();
-                    String titolo = (titoloInput == null) ? "" : titoloInput.trim();
-                    if (titolo.isEmpty()) {
-                        guida.setForeground(new Color(180,26,0));
-                        guida.setText("Il campo non può essere vuoto.");
-                        return;
+                    // Se era in errore (rosso), lo resetto alla guida normale per lo step corrente
+                    if (labelInput.getForeground().equals(new Color(180, 26, 0))) {
+                        aggiornaGuidaDashboardUtente();
+                    } else {
+                        // altrimenti lascio il testo com'è, ma mi assicuro che il colore sia bianco
+                        labelInput.setForeground(Color.WHITE);
                     }
+                }
 
-                    // trova hackathon per titolo (trim + ignore case)
-                    HackathonDAO hdao = new HackathonDAOImpl();
-                    java.util.List<model.Hackathon> tutti = hdao.findAll();
-                    model.Hackathon target = null;
-                    for (model.Hackathon h : tutti) {
-                        String t = (h.getTitolo() == null) ? "" : h.getTitolo().trim();
-                        if (t.equalsIgnoreCase(titolo)) { target = h; break; }
-                    }
-                    if (target == null) {
-                        guida.setForeground(new Color(180,26,0));
-                        guida.setText("<html>Hackathon non trovata<br>o titolo errato.</html>");
-                        return;
-                    }
-
-                    // === NUOVO: controlli finestra iscrizioni con LocalDate (stessi helper della lista) ===
-                    LocalDate inizio = parseLocalDateFlex(target.getInizioIscrizioni());
-                    LocalDate fine   = parseLocalDateFlex(target.getFineIscrizioni());
-                    LocalDate oggi   = today();
-                    if (inizio == null || fine == null) {
-                        guida.setForeground(new Color(180,26,0));
-                        guida.setText("Formato date non valido in questo hackathon.");
-                        return;
-                    }
-                    boolean apertoOggi = (!oggi.isBefore(inizio) && !oggi.isAfter(fine)); // estremi inclusi
-                    if (!apertoOggi) {
-                        guida.setForeground(new Color(180,26,0));
-                        guida.setText("Iscrizioni non aperte oggi per questo hackathon.");
-                        return;
-                    }
-
-                    // ID reale dal DB (niente getId sul model)
-                    Long hackathonId = hdao.findIdByTitolo(target.getTitolo());
-                    if (hackathonId == null) {
-                        guida.setForeground(new Color(180,26,0));
-                        guida.setText("Impossibile recuperare l'ID dell'hackathon.");
-                        return;
-                    }
-
-                    // capienza e doppia iscrizione
-                    dao.IscrizioneDAO idao = new daoImpl.IscrizioneDAOImpl();
-                    if (idao.isIscritto(hackathonId, utente.getMail())) {
-                        guida.setForeground(new Color(180,26,0));
-                        guida.setText("Risulti già iscritto a questo hackathon.");
-                        return;
-                    }
-                    int iscritti = idao.countIscritti(hackathonId);
-                    if (iscritti >= target.getMaxPartecipanti()) {
-                        guida.setForeground(new Color(180,26,0));
-                        guida.setText("Capienza raggiunta: impossibile iscriversi.");
-                        return;
-                    }
-
-                    // riepilogo + mostra "Iscriviti"
-                    datiIscrizioneU.clear();
-                    datiIscrizioneU.add(target.getTitolo());
-                    passoIscrizioneU = 1;
-
-                    dashboardUtente.getAreaDiTesto().setText(
-                            "<html><b>Iscrizione</b><br><br>"
-                                    + "<b>Titolo:</b> " + target.getTitolo() + "<br>"
-                                    + "<b>Organizzatore:</b> " + target.getOrganizzatore() + "<br>"
-                                    + "<b>Iscrizioni:</b> " + formatDMY(inizio) + " → " + formatDMY(fine)
-                                    + "</html>"
-                    );
-                    guida.setForeground(Color.WHITE);
-                    guida.setText("Clicca 'Iscriviti' per confermare.");
-
-                    dashboardUtente.getAvantiButton().setVisible(false);
-                    dashboardUtente.getIscrivitiButton().setVisible(true);
-                    dashboardUtente.getIscrivitiButton().setText("Iscriviti");
-                    dashboardUtente.getFieldScrittura().setText("");
+                @Override
+                public void focusLost(FocusEvent e) {
+                    // non facciamo niente quando esce dal campo
                 }
             });
 
 
 
-            dashboardUtente.getIndietroButton().addActionListener(e -> {
-                if (passoIscrizioneU < 0) return; // non nel flusso iscrizione
-
-                // torna allo step 0
-                passoIscrizioneU = 0;
+            // ===== I miei Hackaton + Creazione Team =====
+            dashboardUtente.getIMieiHackaton().addActionListener(e -> {
+                // 1) Nessuna sovrapposizione con l’iscrizione:
+                passoIscrizioneU = -1;
                 datiIscrizioneU.clear();
 
-                dashboardUtente.getAreaDiTesto().setText("<html><b>Iscrizione</b><br><br><b>Titolo:</b> —</html>");
-                dashboardUtente.getMessaggioErroreOrg().setForeground(Color.WHITE);
-                dashboardUtente.getMessaggioErroreOrg().setText("Inserisci il titolo dell'hackathon.");
+                // attivo il wizard team
+                passoTeamU = 0;
+                datiTeamU.clear();
 
-                dashboardUtente.getIscrivitiButton().setVisible(false);
+                // 2) attivo pannello logico e scrollPane
+                dashboardUtente.getPannelloLogico().setVisible(true);
+                dashboardUtente.getScrollPaneVisualizza().setVisible(true);
+                dashboardUtente.getAreaDiTesto().setVisible(true);
+                dashboardUtente.getFieldScrittura().setVisible(true);
                 dashboardUtente.getAvantiButton().setVisible(true);
+                dashboardUtente.getIndietroButton().setVisible(true);
+                dashboardUtente.getIscrivitiButton().setVisible(false);
+                dashboardUtente.getIscrivitiButton().setText("Crea Team");
+
+                JTextArea textArea = dashboardUtente.getTextAreaVisualizza();
+                JScrollPane scrollPane = dashboardUtente.getScrollPaneVisualizza();
+                Color bg = dashboardUtente.getPannelloLogico().getBackground();
+
+                textArea.setEditable(false);
+                textArea.setFocusable(false);
+                textArea.setBackground(bg);
+                textArea.setForeground(Color.WHITE);
+                textArea.setLineWrap(false);
+                textArea.setWrapStyleWord(false);
+                scrollPane.getViewport().setBackground(bg);
+                scrollPane.setBorder(null);
+
+                // 3) Carica SOLO gli hackathon a cui l'utente è iscritto
+                textArea.setText(""); // pulisci
+                textArea.append("--- I miei Hackathon ---\n\n");
+
+                HackathonDAO dao = new HackathonDAOImpl();
+                java.util.List<model.Hackathon> miei = dao.findByUtenteIscritto(utente.getMail());
+
+                if (miei.isEmpty()) {
+                    textArea.append("Non sei iscritto ad alcun hackathon.\n");
+                    // blocco il wizard team
+                    passoTeamU = -1;
+                    JLabel guida = dashboardUtente.getMessaggioErroreOrg();
+                    guida.setForeground(new Color(180,26,0));
+                    guida.setText("Iscriviti prima ad un hackathon per creare un team.");
+                    dashboardUtente.getFieldScrittura().setVisible(false);
+                    dashboardUtente.getAvantiButton().setVisible(false);
+                    dashboardUtente.getIndietroButton().setVisible(false);
+                    return;
+                }
+
+                for (model.Hackathon h : miei) {
+                    textArea.append(
+                            "Titolo: " + h.getTitolo() + "\n" +
+                                    "Sede: " + h.getSede() + "\n" +
+                                    "Organizzatore: " + h.getOrganizzatore() + "\n" +
+                                    "Inizio: " + h.getInizio() + "\n" +
+                                    "Iscrizioni: " + h.getInizioIscrizioni() + " → " + h.getFineIscrizioni() + "\n\n"
+                    );
+                }
+
+                // 4) reset indicatori wizard
+                aggiornaGuidaDashboardUtente();
+                dashboardUtente.getAreaDiTesto().setText(
+                        "<html><b>Creazione Team</b><br><br><b>Titolo hackathon:</b> —<br><b>Nome team:</b> —</html>"
+                );
                 dashboardUtente.getFieldScrittura().setText("");
                 dashboardUtente.getFieldScrittura().requestFocusInWindow();
             });
 
+
+
+
+            dashboardUtente.getAvantiButton().addActionListener(e -> {
+
+                JLabel guida = dashboardUtente.getMessaggioErroreOrg();
+                guida.setForeground(Color.WHITE);
+
+                // --------------------------------------------------------
+                // 1) WIZARD ISCRIZIONE (Hackaton Disponibili)
+                // --------------------------------------------------------
+                if (passoIscrizioneU >= 0) {
+
+                    if (passoIscrizioneU == 0) {
+                        String titoloInput = dashboardUtente.getFieldScrittura().getText();
+                        String titolo = (titoloInput == null) ? "" : titoloInput.trim();
+                        if (titolo.isEmpty()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Il campo non può essere vuoto.");
+                            return;
+                        }
+
+                        // trova hackathon per titolo (trim + ignore case) tra TUTTI quelli disponibili
+                        dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                        java.util.List<model.Hackathon> tutti = hdao.findAll();
+                        model.Hackathon target = null;
+                        for (model.Hackathon h : tutti) {
+                            String t = (h.getTitolo() == null) ? "" : h.getTitolo().trim();
+                            if (t.equalsIgnoreCase(titolo)) {
+                                target = h;
+                                break;
+                            }
+                        }
+                        if (target == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Hackathon non trovata.");
+                            return;
+                        }
+
+                        // verifica finestra iscrizioni con LocalDate (stessi helper della lista)
+                        java.time.LocalDate oggi = today();
+                        java.time.LocalDate inizio = parseLocalDateFlex(target.getInizioIscrizioni());
+                        java.time.LocalDate fine = parseLocalDateFlex(target.getFineIscrizioni());
+                        if (inizio == null || fine == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Formato date non valido in questo hackathon.");
+                            return;
+                        }
+                        boolean apertoOggi = (!oggi.isBefore(inizio) && !oggi.isAfter(fine)); // estremi inclusi
+                        if (!apertoOggi) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Iscrizioni non aperte oggi per questo hackathon.");
+                            return;
+                        }
+
+                        // ID reale dal DB (niente getId sul model)
+                        Long hackathonId = hdao.findIdByTitolo(target.getTitolo());
+                        if (hackathonId == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Impossibile recuperare l'ID dell'hackathon.");
+                            return;
+                        }
+
+                        // controlli iscrizione (già iscritto / capienza)
+                        dao.IscrizioneDAO idao = new daoImpl.IscrizioneDAOImpl();
+                        if (idao.isIscritto(hackathonId, utente.getMail())) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Sei già iscritto a questo hackathon.");
+                            return;
+                        }
+                        int iscritti = idao.countIscritti(hackathonId);
+                        if (iscritti >= target.getMaxPartecipanti()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Capienza raggiunta: impossibile iscriversi.");
+                            return;
+                        }
+
+                        // riepilogo + mostra "Iscriviti"
+                        datiIscrizioneU.clear();
+                        datiIscrizioneU.add(target.getTitolo());
+                        passoIscrizioneU = 1;
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Iscrizione</b><br><br>"
+                                        + "<b>Titolo:</b> " + target.getTitolo() + "<br>"
+                                        + "<b>Organizzatore:</b> " + target.getOrganizzatore() + "<br>"
+                                        + "<b>Iscrizioni:</b> " + formatDMY(inizio) + " → " + formatDMY(fine) + "<br>"
+                                        + "</html>"
+                        );
+                        aggiornaGuidaDashboardUtente();
+
+                        dashboardUtente.getAvantiButton().setVisible(false);
+                        dashboardUtente.getIscrivitiButton().setVisible(true);
+                        dashboardUtente.getIscrivitiButton().setText("Iscriviti");
+                        dashboardUtente.getFieldScrittura().setText("");
+                    }
+
+                    return; // fine ramo iscrizione
+                }
+
+                // --------------------------------------------------------
+                // 2) WIZARD TEAM (I miei Hackaton → Crea Team)
+                // --------------------------------------------------------
+                if (passoTeamU >= 0) {
+
+                    // STEP 0: inserimento titolo hackathon
+                    if (passoTeamU == 0) {
+                        String titoloInput = dashboardUtente.getFieldScrittura().getText();
+                        String titolo = (titoloInput == null) ? "" : titoloInput.trim();
+
+                        if (titolo.isEmpty()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Il titolo non può essere vuoto.");
+                            return;
+                        }
+
+                        // cerca l'hackathon SOLO tra quelli dove l'utente è iscritto
+                        dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                        java.util.List<model.Hackathon> miei = hdao.findByUtenteIscritto(utente.getMail());
+                        model.Hackathon target = null;
+                        for (model.Hackathon h : miei) {
+                            String t = (h.getTitolo() == null) ? "" : h.getTitolo().trim();
+                            if (t.equalsIgnoreCase(titolo)) {
+                                target = h;
+                                break;
+                            }
+                        }
+                        if (target == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Non risulti iscritto a un hackathon con questo titolo.");
+                            return;
+                        }
+
+                        Long hackathonId = hdao.findIdByTitolo(target.getTitolo());
+                        if (hackathonId == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Impossibile recuperare l'ID dell'hackathon.");
+                            return;
+                        }
+
+                        // controlla che l'utente NON abbia già un team per quell'hackathon
+                        dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                        if (tdao.utenteHaTeam(hackathonId, utente.getMail())) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Hai già un team per questo hackathon.");
+                            return;
+                        }
+
+                        // passa allo step successivo (nome team)
+                        passoTeamU = 1;
+                        datiTeamU.clear();
+                        datiTeamU.add(target.getTitolo()); // salvo titolo hackathon
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Creazione Team</b><br><br>"
+                                        + "<b>Titolo hackathon:</b> " + target.getTitolo() + "<br>"
+                                        + "<b>Nome team:</b> —</html>"
+                        );
+                        aggiornaGuidaDashboardUtente();
+                        dashboardUtente.getFieldScrittura().setText("");
+                        dashboardUtente.getFieldScrittura().requestFocusInWindow();
+                        return;
+                    }
+
+                    // STEP 1: inserimento nome team
+                    if (passoTeamU == 1) {
+                        if (datiTeamU.isEmpty()) return; // safety
+
+                        String nomeTeamInput = dashboardUtente.getFieldScrittura().getText();
+                        String nomeTeam = (nomeTeamInput == null) ? "" : nomeTeamInput.trim();
+
+                        if (nomeTeam.isEmpty()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Il nome del team non può essere vuoto.");
+                            return;
+                        }
+
+                        String titoloHackathon = datiTeamU.get(0);
+
+                        dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                        Long hackathonId = hdao.findIdByTitolo(titoloHackathon);
+                        if (hackathonId == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Impossibile recuperare l'ID dell'hackathon.");
+                            return;
+                        }
+
+                        dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                        if (tdao.esisteTeamConNome(hackathonId, nomeTeam)) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Esiste già un team con questo nome in questo hackathon.");
+                            return;
+                        }
+
+                        // Riepilogo + mostra "Crea Team"
+                        passoTeamU = 2;
+                        if (datiTeamU.size() == 1) datiTeamU.add(nomeTeam);
+                        else datiTeamU.set(1, nomeTeam);
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Creazione Team</b><br><br>"
+                                        + "<b>Titolo hackathon:</b> " + titoloHackathon + "<br>"
+                                        + "<b>Nome team:</b> " + nomeTeam + "</html>"
+                        );
+                        aggiornaGuidaDashboardUtente();
+                        dashboardUtente.getAvantiButton().setVisible(false);
+                        dashboardUtente.getIscrivitiButton().setVisible(true);
+                        dashboardUtente.getIscrivitiButton().setText("Crea Team");
+                        dashboardUtente.getFieldScrittura().setText("");
+                        return;
+                    }
+
+                    return; // fine ramo team
+                }
+
+                // nessun wizard attivo → non fare nulla
+            });
+
+
+
+            dashboardUtente.getIndietroButton().addActionListener(e -> {
+
+                JLabel guida = dashboardUtente.getMessaggioErroreOrg();
+                guida.setForeground(Color.WHITE);
+                aggiornaGuidaDashboardUtente();
+                // 1) wizard TEAM
+                if (passoTeamU >= 0) {
+
+                    if (passoTeamU == 1) {
+                        // torna alla scelta hackathon
+                        passoTeamU = 0;
+                        datiTeamU.clear();
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Creazione Team</b><br><br>"
+                                        + "<b>Titolo hackathon:</b> —<br>"
+                                        + "<b>Nome team:</b> —</html>"
+                        );
+                        aggiornaGuidaDashboardUtente();
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+                        dashboardUtente.getFieldScrittura().setText("");
+                        dashboardUtente.getFieldScrittura().requestFocusInWindow();
+                        return;
+                    }
+
+                    if (passoTeamU == 2) {
+                        // torna all'inserimento nome team
+                        passoTeamU = 1;
+                        String titoloHackathon = datiTeamU.isEmpty() ? "—" : datiTeamU.get(0);
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Creazione Team</b><br><br>"
+                                        + "<b>Titolo hackathon:</b> " + titoloHackathon + "<br>"
+                                        + "<b>Nome team:</b> —</html>"
+                        );
+                        aggiornaGuidaDashboardUtente();
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+                        dashboardUtente.getFieldScrittura().setText("");
+                        dashboardUtente.getFieldScrittura().requestFocusInWindow();
+                        return;
+                    }
+                }
+
+                // 2) wizard ISCRIZIONE
+                if (passoIscrizioneU >= 0) {
+                    // torna sempre allo step 0
+                    passoIscrizioneU = 0;
+                    datiIscrizioneU.clear();
+
+                    dashboardUtente.getAreaDiTesto().setText(
+                            "<html><b>Iscrizione</b><br><br><b>Titolo:</b> —</html>"
+                    );
+                    aggiornaGuidaDashboardUtente();
+                    dashboardUtente.getIscrivitiButton().setVisible(false);
+                    dashboardUtente.getAvantiButton().setVisible(true);
+                    dashboardUtente.getFieldScrittura().setText("");
+                    dashboardUtente.getFieldScrittura().requestFocusInWindow();
+                }
+            });
+
+
             dashboardUtente.getIscrivitiButton().addActionListener(e -> {
-                // deve essere il passo di conferma
-                if (passoIscrizioneU != 1 || datiIscrizioneU.isEmpty()) return;
 
                 JLabel guida = dashboardUtente.getMessaggioErroreOrg();
                 guida.setForeground(java.awt.Color.WHITE);
+
+                // --------------------------------------------------------
+                // 1) Conferma CREAZIONE TEAM
+                // --------------------------------------------------------
+                if (passoTeamU == 2 && datiTeamU.size() >= 2) {
+
+                    String titoloHackathon = datiTeamU.get(0);
+                    String nomeTeam = datiTeamU.get(1);
+
+                    try {
+                        dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                        Long hackathonId = hdao.findIdByTitolo(titoloHackathon);
+                        if (hackathonId == null) {
+                            guida.setForeground(new java.awt.Color(180, 26, 0));
+                            guida.setText("Impossibile recuperare l'ID dell'hackathon.");
+                            return;
+                        }
+
+                        dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+
+                        // sicurezza extra
+                        if (tdao.utenteHaTeam(hackathonId, utente.getMail())) {
+                            guida.setForeground(new java.awt.Color(180, 26, 0));
+                            guida.setText("Hai già un team per questo hackathon.");
+                            return;
+                        }
+
+                        tdao.creaTeam(nomeTeam, hackathonId, utente.getMail());
+
+                        javax.swing.JOptionPane.showMessageDialog(frame2,
+                                "Team \"" + nomeTeam + "\" creato con successo per \"" + titoloHackathon + "\".",
+                                "Team creato",
+                                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+                        // reset stato wizard team
+                        passoTeamU = -1;
+                        datiTeamU.clear();
+
+                        guida.setText("Team creato.");
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+                        dashboardUtente.getFieldScrittura().setText("");
+                        // Ricarico la schermata "I miei Hackaton"
+                        dashboardUtente.getIMieiHackaton().doClick();
+
+
+                    } catch (Exception ex) {
+                        guida.setForeground(new java.awt.Color(180, 26, 0));
+                        guida.setText("Errore durante la creazione del team: " + ex.getMessage());
+                    }
+                    return;
+                }
+
+                // --------------------------------------------------------
+                // 2) Conferma ISCRIZIONE
+                // --------------------------------------------------------
+                if (passoIscrizioneU != 1 || datiIscrizioneU.isEmpty()) return;
 
                 String titolo = datiIscrizioneU.get(0);
 
@@ -378,54 +705,63 @@ public class Controller {
                     model.Hackathon target = null;
                     for (model.Hackathon h : tutti) {
                         String t = (h.getTitolo() == null) ? "" : h.getTitolo().trim();
-                        if (t.equalsIgnoreCase(titolo.trim())) { target = h; break; }
+                        if (t.equalsIgnoreCase(titolo.trim())) {
+                            target = h;
+                            break;
+                        }
                     }
                     if (target == null) {
-                        guida.setForeground(new java.awt.Color(180,26,0));
+                        guida.setForeground(new java.awt.Color(180, 26, 0));
                         guida.setText("Hackathon non trovata.");
                         return;
                     }
 
-                    // 2) ID reale dal DB
                     Long hackathonId = hdao.findIdByTitolo(target.getTitolo());
                     if (hackathonId == null) {
-                        guida.setForeground(new java.awt.Color(180,26,0));
+                        guida.setForeground(new java.awt.Color(180, 26, 0));
                         guida.setText("Impossibile recuperare l'ID dell'hackathon.");
                         return;
                     }
 
-                    // 3) doppia sicurezza su capienza e doppie iscrizioni
                     dao.IscrizioneDAO idao = new daoImpl.IscrizioneDAOImpl();
                     if (idao.isIscritto(hackathonId, utente.getMail())) {
-                        guida.setForeground(new java.awt.Color(180,26,0));
+                        guida.setForeground(new java.awt.Color(180, 26, 0));
                         guida.setText("Sei già iscritto.");
                         return;
                     }
                     int iscritti = idao.countIscritti(hackathonId);
                     if (iscritti >= target.getMaxPartecipanti()) {
-                        guida.setForeground(new java.awt.Color(180,26,0));
+                        guida.setForeground(new java.awt.Color(180, 26, 0));
                         guida.setText("Capienza raggiunta.");
                         return;
                     }
 
-                    // 4) INSERT
+                    // 4) INSERT iscrizione
                     java.time.LocalDate oggi = java.time.LocalDate.now();
                     idao.iscrivi(hackathonId, utente.getMail(), oggi);
 
                     javax.swing.JOptionPane.showMessageDialog(frame2,
                             "Iscrizione completata per \"" + target.getTitolo() + "\".",
-                            "Successo", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                            "Iscrizione completata",
+                            javax.swing.JOptionPane.INFORMATION_MESSAGE);
 
-                    // === RESET UI: riparte come se avessimo appena cliccato "Hackaton Disponibili"
+                    // reset wizard iscrizione
                     passoIscrizioneU = -1;
                     datiIscrizioneU.clear();
-                    dashboardUtente.getHackatonDisponibili().doClick(); // riusa la stessa logica del bottone
+                    guida.setText("Iscrizione completata.");
+
+                    dashboardUtente.getIscrivitiButton().setVisible(false);
+                    dashboardUtente.getAvantiButton().setVisible(true);
+                    dashboardUtente.getFieldScrittura().setText("");
+                    dashboardUtente.getHackatonDisponibili().doClick();
+
 
                 } catch (Exception ex) {
-                    guida.setForeground(new java.awt.Color(180,26,0));
-                    guida.setText("Operazione non riuscita.");
+                    guida.setForeground(new java.awt.Color(180, 26, 0));
+                    guida.setText("Errore durante l'iscrizione: " + ex.getMessage());
                 }
             });
+
 
 
 
@@ -1041,6 +1377,40 @@ public class Controller {
             creaBtn.setVisible(true);
             creaBtn.setText("Invita");
         }
+    }
+
+
+    // Guida testuale per la DashboardUtente, in base allo stato dei wizard
+    private void aggiornaGuidaDashboardUtente() {
+        if (dashboardUtente == null) return;
+
+        JLabel guida = dashboardUtente.getMessaggioErroreOrg();
+        guida.setForeground(Color.WHITE);
+
+        // Wizard ISCRIZIONE (Hackaton disponibili)
+        if (passoIscrizioneU >= 0) {
+            if (passoIscrizioneU == 0) {
+                guida.setText("<html>Inserisci il titolo<br>dell'hackathon.</html>");
+            } else if (passoIscrizioneU == 1) {
+                guida.setText("<html>Clicca 'Iscriviti'<br>per confermare.</html>");
+            }
+            return;
+        }
+
+        // Wizard TEAM (I miei Hackaton → Crea Team)
+        if (passoTeamU >= 0) {
+            if (passoTeamU == 0) {
+                guida.setText("<html>Inserisci il titolo<br>dell'hackathon.</html>");
+            } else if (passoTeamU == 1) {
+                guida.setText("<html>Inserisci il nome<br>del team.</html>");
+            } else if (passoTeamU == 2) {
+                guida.setText("<html>Clicca 'Crea Team'<br>per confermare.</html>");
+            }
+            return;
+        }
+
+        // Nessun wizard attivo
+        guida.setText("");
     }
 
 }

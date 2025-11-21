@@ -14,9 +14,8 @@ public interface HackathonDAO {
 
     void invitaGiudice(String titoloHackathon, String organizzatoreEmail, String giudiceEmail);
 
-    /**
-     * Restituisce le email dei giudici già invitati per (titolo, organizzatore).
-     */
     List<String> listaGiudiciInvitati(String titoloHackathon, String organizzatoreEmail);
+
+    List<Hackathon> findByUtenteIscritto(String emailUtente);
 }
 
