@@ -28,6 +28,7 @@ public class DashboardUtente {
     private JButton iscrivitiButton;
     private JLabel AreaDiTesto;
     private JLabel messaggioErroreOrg;
+    private JButton classificaButtonù;
 
     public DashboardUtente(String emailUtente) {
 
@@ -57,13 +58,13 @@ public class DashboardUtente {
         dashboardUtente.setMinimumSize(new Dimension(900, 600));
         dashboardUtente.setPreferredSize(new Dimension(900, 600));
         pannelloBottoni = new JPanel();
-        pannelloBottoni.setLayout(new GridLayoutManager(6, 1, new Insets(15, 15, 15, 15), -1, -1));
+        pannelloBottoni.setLayout(new GridLayoutManager(7, 1, new Insets(15, 15, 15, 15), -1, -1));
         pannelloBottoni.setBackground(new Color(-15918294));
         pannelloBottoni.setEnabled(true);
         dashboardUtente.add(pannelloBottoni, BorderLayout.EAST);
         pannelloBottoni.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-16777216)), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         final Spacer spacer1 = new Spacer();
-        pannelloBottoni.add(spacer1, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        pannelloBottoni.add(spacer1, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         hackatonDisponibili = new JButton();
         hackatonDisponibili.setBackground(new Color(-13877680));
         hackatonDisponibili.setFocusable(false);
@@ -101,7 +102,7 @@ public class DashboardUtente {
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         panel1.setVisible(false);
-        pannelloBottoni.add(panel1, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        pannelloBottoni.add(panel1, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         messaggioBenvenuto = new JLabel();
         messaggioBenvenuto.setBackground(new Color(-15918294));
         Font messaggioBenvenutoFont = this.$$$getFont$$$("Inter", -1, 11, messaggioBenvenuto.getFont());
@@ -110,6 +111,17 @@ public class DashboardUtente {
         messaggioBenvenuto.setIcon(new ImageIcon(getClass().getResource("/icone/icone bianche/icons8-user-40.png")));
         messaggioBenvenuto.setText("");
         pannelloBottoni.add(messaggioBenvenuto, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTHEAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        classificaButtonù = new JButton();
+        classificaButtonù.setBackground(new Color(-13877680));
+        classificaButtonù.setFocusable(false);
+        Font classificaButtonùFont = this.$$$getFont$$$("Inter", -1, -1, classificaButtonù.getFont());
+        if (classificaButtonùFont != null) classificaButtonù.setFont(classificaButtonùFont);
+        classificaButtonù.setForeground(new Color(-1));
+        classificaButtonù.setHorizontalTextPosition(4);
+        classificaButtonù.setIconTextGap(6);
+        classificaButtonù.setRequestFocusEnabled(true);
+        classificaButtonù.setText("Classifica");
+        pannelloBottoni.add(classificaButtonù, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
         pannelloLogic = new JPanel();
         pannelloLogic.setLayout(new GridLayoutManager(4, 4, new Insets(15, 15, 15, 15), -1, -1));
         pannelloLogic.setBackground(new Color(-14540254));
@@ -264,6 +276,10 @@ public class DashboardUtente {
 
     public JButton getIMieiTeam() {
         return iMieiTeam;
+    }
+
+    public JButton getClassificaButton() {
+        return classificaButtonù;
     }
 
 }

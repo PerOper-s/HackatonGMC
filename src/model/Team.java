@@ -8,6 +8,7 @@ public class Team {
     private List<Documento> progressi;
     private int votoFinale;
     private Hackathon hackathon;
+    private String nome;
 
     public Team(Hackathon hackathon) {
         this.membri = new ArrayList<>();
@@ -69,4 +70,14 @@ public class Team {
     public void setVotoFinale(int votoFinale) {
         this.votoFinale = votoFinale;
     }
+    // 🔹 NUOVO: getter/setter per il nome del team
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 }
+
+

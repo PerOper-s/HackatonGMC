@@ -446,6 +446,8 @@ public class Controller {
                 // preparo DAO extra fuori dal ciclo (sopra al for)
                 dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
                 dao.DocumentoDAO ddao = new daoImpl.DocumentoDAOImpl();
+                dao.ProblemaDAO pdao = new daoImpl.ProblemaDAOImpl();
+                dao.CommentoDAO cdao = new daoImpl.CommentoDAOImpl();
                 java.util.List<model.Hackathon> tuttiHackathon = hdao.findAll();
 
                 for (model.TeamInfo info : mieiTeam) {
@@ -518,6 +520,46 @@ public class Controller {
                     } else {
                         textArea.append("Ultimo documento: dati hackathon non disponibili.\n");
                     }
+
+                    // --- Problema e commenti dei giudici ---
+                    if (hackathonId != null) {
+                        // PROBLEMA
+                        model.Problema problema = pdao.trovaPerHackathon(hackathonId);
+                        if (problema == null) {
+                            textArea.append("Problema: nessun problema pubblicato.\n");
+                        } else {
+                            String descr = problema.getDescrizione();
+                            if (descr != null && descr.length() > 150) {
+                                descr = descr.substring(0, 150) + "...";
+                            }
+                            String emailGiudice = (problema.getGiudice() != null)
+                                    ? problema.getGiudice().getMail()
+                                    : "?";
+
+                            textArea.append("Problema: \"" + descr + "\" (Giudice: " + emailGiudice + ")\n");
+                        }
+
+                        // COMMENTI
+                        java.util.List<model.CommentoInfo> commenti =
+                                cdao.findCommentiPerTeam(hackathonId, info.getId());
+
+                        if (commenti.isEmpty()) {
+                            textArea.append("Commenti: nessun commento.\n");
+                        } else {
+                            textArea.append("Commenti:\n");
+                            for (model.CommentoInfo c : commenti) {
+                                String testo = c.getContenuto();
+                                if (testo != null && testo.length() > 150) {
+                                    testo = testo.substring(0, 150) + "...";
+                                }
+                                textArea.append("Giudice " + c.getGiudiceEmail()
+                                        + ": \"" + testo + "\"\n");
+                            }
+                        }
+                    }
+
+                    textArea.append("\n");
+
 
                     textArea.append("\n"); // separatore tra team
                 }
@@ -1169,8 +1211,114 @@ public class Controller {
                     guida.setForeground(new java.awt.Color(180, 26, 0));
                     guida.setText("Errore durante l'iscrizione: " + ex.getMessage());
                 }
+
             });
 
+            // ===== Classifica =====
+            dashboardUtente.getClassificaButton().addActionListener(e -> {
+                // disattivo tutti i wizard
+                passoIscrizioneU = -1;
+                datiIscrizioneU.clear();
+                passoTeamU = -1;
+                datiTeamU.clear();
+                passoDocumentoU = -1;
+                datiDocumentoU.clear();
+
+                // mostro solo pannello logico + scrollPane
+                dashboardUtente.getPannelloLogico().setVisible(true);
+                dashboardUtente.getScrollPaneVisualizza().setVisible(true);
+                dashboardUtente.getTextAreaVisualizza().setVisible(true);
+                dashboardUtente.getAreaDiTesto().setVisible(true);
+
+                dashboardUtente.getFieldScrittura().setVisible(false);
+                dashboardUtente.getAvantiButton().setVisible(false);
+                dashboardUtente.getIndietroButton().setVisible(false);
+                dashboardUtente.getIscrivitiButton().setVisible(false);
+
+                JLabel guida = dashboardUtente.getMessaggioErroreOrg();
+                guida.setForeground(Color.WHITE);
+                guida.setText(""); // solo lettura, niente guida wizard
+
+                JTextArea textArea = dashboardUtente.getTextAreaVisualizza();
+                JScrollPane scrollPane = dashboardUtente.getScrollPaneVisualizza();
+                Color bg = dashboardUtente.getPannelloLogico().getBackground();
+
+                textArea.setEditable(false);
+                textArea.setFocusable(false);
+                textArea.setBackground(bg);
+                textArea.setForeground(Color.WHITE);
+                textArea.setLineWrap(false);
+                textArea.setWrapStyleWord(false);
+                scrollPane.getViewport().setBackground(bg);
+                scrollPane.setBorder(null);
+
+                textArea.setText("");
+                textArea.append("--- Classifiche dei miei hackathon ---\n\n");
+
+                // 1) prendo i team dell'utente
+                dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                java.util.List<model.TeamInfo> mieiTeam = tdao.findTeamsByUtente(utente.getMail());
+
+                if (mieiTeam.isEmpty()) {
+                    textArea.append("Non fai parte di alcun team.\n");
+                    return;
+                }
+
+                // 2) raggruppo per titolo hackathon
+                java.util.Map<String, java.util.List<String>> mieiTeamPerHackathon = new java.util.HashMap<>();
+                for (model.TeamInfo info : mieiTeam) {
+                    String titoloHackathon = info.getTitoloHackathon();
+                    mieiTeamPerHackathon
+                            .computeIfAbsent(titoloHackathon, k -> new java.util.ArrayList<>())
+                            .add(info.getNomeTeam());
+                }
+
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                dao.ClassificaDAO cdao = new daoImpl.ClassificaDAOImpl();
+
+                // 3) per ogni hackathon, stampo la classifica
+                for (String titoloHackathon : mieiTeamPerHackathon.keySet()) {
+                    Long hackathonId = hdao.findIdByTitolo(titoloHackathon);
+                    if (hackathonId == null) {
+                        continue;
+                    }
+
+                    java.util.List<model.Classifica> classifica =
+                            cdao.findClassificaByHackathon(hackathonId);
+
+                    textArea.append("Hackathon: " + titoloHackathon + "\n");
+
+                    if (classifica.isEmpty()) {
+                        textArea.append("  Nessun voto registrato.\n\n");
+                        continue;
+                    }
+
+                    java.util.List<String> mieiNomiTeam = mieiTeamPerHackathon.get(titoloHackathon);
+
+                    int posizione = 1;
+                    for (model.Classifica riga : classifica) {
+                        String nomeTeam = riga.getTeam().getNome(); // usa il tuo getter
+                        int punteggio = riga.getPunteggio();
+
+                        boolean mio = mieiNomiTeam.contains(nomeTeam);
+
+                        textArea.append("  " + posizione + ") "
+                                + nomeTeam
+                                + " – punteggio: " + punteggio);
+
+                        if (mio) {
+                            textArea.append("  <-- il tuo team");
+                        }
+                        textArea.append("\n");
+                        posizione++;
+                    }
+
+                    textArea.append("\n");
+                }
+
+                scrollPane.revalidate();
+                scrollPane.repaint();
+            });
 
 
 
