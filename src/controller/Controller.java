@@ -46,6 +46,8 @@ public class Controller {
     private ArrayList<String> datiTeamU = new ArrayList<>();
     private int passoDocumentoU = -1;
     private ArrayList<String> datiDocumentoU = new ArrayList<>();
+    private int passoInvitoG = -1;
+    private java.util.List<String> datiInvitoG = new java.util.ArrayList<>();
 
 
 
@@ -1330,20 +1332,336 @@ public class Controller {
 
         }
 
-        private void gestisciDashboardGiudice(Giudice giudice){
-            JLabel messaggioBenvenuto1 = dashboardGiudice.getMessaggioBenvenuto1();
-            frame2 = new JFrame("HackatonDashboard - Giudice" );
-            frame2.setContentPane(dashboardGiudice.getDashboardGiudice());
-            frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame2.pack();
-            frame2.setLocationRelativeTo(null);
-            frame2.setVisible(true);
-            frame2.setResizable(false);
+    private void gestisciDashboardGiudice(Giudice giudice){
+        JLabel messaggioBenvenuto = dashboardGiudice.getMessaggioBenvenuto();
+        frame2 = new JFrame("HackatonDashboard - Giudice" );
+        frame2.setContentPane(dashboardGiudice.getDashboardGiudice());
+        frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame2.pack();
+        frame2.setLocationRelativeTo(null);
+        frame2.setVisible(true);
+        frame2.setResizable(false);
 
-            messaggioBenvenuto1.setText("Giudice, " + giudice.getMail() + " ");
+        JTextField inputFieldG = dashboardGiudice.getFieldScrittura();
+        if (inputFieldG != null) {
+            inputFieldG.addFocusListener(new FocusListener() {
+                @Override
+                public void focusGained(FocusEvent e) {
+                    JLabel labelInput = dashboardGiudice.getMessaggioErroreOrg();
+                    if (labelInput == null) return;
+
+                    // Se era in errore (rosso), ripristino la guida corretta per lo step corrente
+                    if (labelInput.getForeground().equals(new Color(180, 26, 0))) {
+                        aggiornaGuidaDashboardGiudice();
+                    } else {
+                        // altrimenti mi assicuro solo che il colore sia bianco
+                        labelInput.setForeground(Color.WHITE);
+                    }
+                }
+
+                @Override
+                public void focusLost(FocusEvent e) {
+                    // qui non serve fare nulla
+                }
+            });
+        }
+        // messaggio in alto
+        if (messaggioBenvenuto != null) {
+            messaggioBenvenuto.setText("Giudice, " + giudice.getMail() + " ");
         }
 
-        private void gestisciDashboardOrganizzatore(Organizzatore organizzatore){
+        // ===== BOTTONE "VISUALIZZA INVITI" =====
+        dashboardGiudice.getVisualizzaInvitiButton().addActionListener(e -> {
+
+            // reset wizard giudice
+            passoInvitoG = 0;
+            datiInvitoG.clear();
+
+            JPanel pannelloLogico = dashboardGiudice.getPannelloLogico();
+            if (pannelloLogico != null) {
+                pannelloLogico.setVisible(true);
+            }
+
+            JScrollPane scroll = dashboardGiudice.getScrollPaneVisualizza();
+            JTextArea textArea = dashboardGiudice.getTextAreaVisualizza();
+            JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+
+            // titolo procedurale sopra
+            if (areaDiTesto != null) {
+                areaDiTesto.setVisible(true);
+                areaDiTesto.setText(
+                        "<html><b>Accettazione invito</b><br><br>" +
+                                "<b>Hackathon:</b> —</html>"
+                );
+            }
+
+            // guida passo 0
+            if (guida != null) {
+                guida.setForeground(Color.WHITE);
+                guida.setText("<html>Inserisci il titolo<br>dell'hackathon che vuoi accettare.</html>");
+            }
+
+            // campo input + bottoni wizard
+            JTextField field = dashboardGiudice.getFieldScrittura();
+            if (field != null) {
+                field.setVisible(true);
+                field.setText("");
+                field.requestFocusInWindow();
+            }
+
+            JButton avanti = dashboardGiudice.getAvantiButton();
+            if (avanti != null) {
+                avanti.setVisible(true);
+            }
+            JButton indietro = dashboardGiudice.getIndietroButton();
+            if (indietro != null) {
+                indietro.setVisible(false); // se vuoi dopo gli dai una funzione
+            }
+            JButton iscriviti = dashboardGiudice.getIscrivitiButton();
+            if (iscriviti != null) {
+                iscriviti.setVisible(false);
+            }
+
+            // prepara textArea / scroll con la lista inviti
+            if (scroll != null) scroll.setVisible(true);
+            if (textArea == null) return;
+
+            Color bg = pannelloLogico != null
+                    ? pannelloLogico.getBackground()
+                    : dashboardGiudice.getDashboardGiudice().getBackground();
+
+            textArea.setVisible(true);
+            textArea.setEditable(false);
+            textArea.setFocusable(false);
+            textArea.setBackground(bg);
+            textArea.setForeground(Color.WHITE);
+            textArea.setLineWrap(false);
+            textArea.setWrapStyleWord(false);
+            if (scroll != null) {
+                scroll.getViewport().setBackground(bg);
+                scroll.setBorder(null);
+            }
+
+            textArea.setText("");
+            textArea.append("--- Inviti come giudice ---\n\n");
+
+            dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+            java.util.List<model.Hackathon> inviti =
+                    hdao.findInvitiPerGiudice(giudice.getMail());
+
+            if (inviti.isEmpty()) {
+                textArea.append("Non hai inviti al momento.\n");
+            } else {
+                for (model.Hackathon h : inviti) {
+                    textArea.append("Titolo: " + h.getTitolo() + "\n");
+                    textArea.append("Organizzatore: " + h.getOrganizzatore() + "\n");
+                    textArea.append("Sede: " + h.getSede() + "\n");
+                    textArea.append("Inizio: " + h.getInizio() + "\n");
+                    textArea.append("Iscrizioni: " + h.getInizioIscrizioni()
+                            + " → " + h.getFineIscrizioni() + "\n");
+                    textArea.append("----------------------------------------\n");
+                }
+            }
+
+            if (scroll != null) {
+                scroll.revalidate();
+                scroll.repaint();
+            }
+        });
+
+        dashboardGiudice.getAvantiButton().addActionListener(e2 -> {
+
+            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+            if (guida != null) {
+                guida.setForeground(Color.WHITE);
+            }
+
+            // se non è attivo il wizard giudice, non fare nulla
+            if (passoInvitoG < 0) {
+                return;
+            }
+
+            // ===== STEP 0: inserimento titolo hackathon =====
+            if (passoInvitoG == 0) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                if (field == null) return;
+
+                String titoloInput = field.getText();
+                String titolo = (titoloInput == null) ? "" : titoloInput.trim();
+
+                if (titolo.isEmpty()) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Il titolo non può<br>essere vuoto.</html>");
+                    }
+                    return;
+                }
+
+                // controllo che il titolo sia tra gli inviti del giudice
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                java.util.List<model.Hackathon> inviti =
+                        hdao.findInvitiPerGiudice(giudice.getMail());
+
+                model.Hackathon target = null;
+                for (model.Hackathon h : inviti) {
+                    if (h.getTitolo() != null &&
+                            h.getTitolo().trim().equalsIgnoreCase(titolo)) {
+                        target = h;
+                        break;
+                    }
+                }
+
+                if (target == null) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Non risulti invitato<br>a un hackathon con questo titolo.</html>");
+                    }
+                    return;
+                }
+
+                // salvo dati wizard
+                datiInvitoG.clear();
+                datiInvitoG.add(target.getTitolo());
+                passoInvitoG = 1;
+
+                // aggiorno area di testo (riepilogo)
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText(
+                            "<html><b>Accettazione invito</b><br><br>" +
+                                    "<b>Hackathon:</b> " + target.getTitolo() + "</html>"
+                    );
+                }
+
+                // guida step 1
+                if (guida != null) {
+                    guida.setForeground(Color.WHITE);
+                    guida.setText("<html>Clicca 'Partecipa'<br>per accettare l'invito.</html>");
+                }
+
+                // mostra il bottone "Partecipa"
+                JButton avanti = dashboardGiudice.getAvantiButton();
+                JButton iscriviti = dashboardGiudice.getIscrivitiButton();
+                if (avanti != null) avanti.setVisible(false);
+                if (iscriviti != null) {
+                    iscriviti.setVisible(true);
+                    iscriviti.setText("Partecipa");
+                }
+
+                field.setText("");
+                return;
+            }
+        });
+
+        dashboardGiudice.getIscrivitiButton().addActionListener(e3 -> {
+
+            // se il wizard invito non è nello step giusto, ignoro
+            if (passoInvitoG != 1 || datiInvitoG.isEmpty()) {
+                return;
+            }
+
+            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+            if (guida != null) {
+                guida.setForeground(Color.WHITE);
+            }
+
+            String titoloHackathon = datiInvitoG.get(0);
+
+            dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+            boolean ok = hdao.accettaInvitoGiudice(titoloHackathon, giudice.getMail());
+
+            if (!ok) {
+                if (guida != null) {
+                    guida.setForeground(new Color(180, 26, 0));
+                    guida.setText("<html>Errore nell'accettazione<br>dell'invito.</html>");
+                }
+                return;
+            }
+
+            // invito accettato
+            if (guida != null) {
+                guida.setForeground(Color.WHITE);
+                guida.setText("<html>Invito accettato!<br>Ora sei giudice di questo hackathon.</html>");
+            }
+
+            // reset wizard
+            passoInvitoG = -1;
+            datiInvitoG.clear();
+
+            // aggiorno la lista inviti rifacendo click sul bottone
+            dashboardGiudice.getVisualizzaInvitiButton().doClick();
+        });
+
+        dashboardGiudice.getIndietroButton().addActionListener(e -> {
+
+            // Se il wizard invito non è attivo, non faccio nulla
+            if (passoInvitoG < 0) {
+                return;
+            }
+
+            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+            JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+            JTextField field = dashboardGiudice.getFieldScrittura();
+            JButton avanti = dashboardGiudice.getAvantiButton();
+            JButton partecipa = dashboardGiudice.getIscrivitiButton();
+
+            // ===== TORNA DA STEP 1 A STEP 0 =====
+            if (passoInvitoG == 1) {
+                passoInvitoG = 0;
+                datiInvitoG.clear();
+
+                // ripristino testo guida e area procedurale iniziale
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText(
+                            "<html><b>Accettazione invito</b><br><br>" +
+                                    "<b>Hackathon:</b> —</html>"
+                    );
+                }
+                if (guida != null) {
+                    guida.setForeground(Color.WHITE);
+                    guida.setText("<html>Inserisci il titolo<br>dell'hackathon che vuoi accettare.</html>");
+                }
+
+                if (field != null) {
+                    field.setVisible(true);
+                    field.setText("");
+                    field.requestFocusInWindow();
+                }
+                if (avanti != null) avanti.setVisible(true);
+                if (partecipa != null) partecipa.setVisible(false);
+
+                return;
+            }
+
+            // ===== DA STEP 0 → ESCE DAL WIZARD =====
+            if (passoInvitoG == 0) {
+                passoInvitoG = -1;
+                datiInvitoG.clear();
+
+                if (guida != null) {
+                    guida.setText("");
+                }
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText("");
+                }
+                if (field != null) {
+                    field.setText("");
+                    field.setVisible(false);
+                }
+                if (avanti != null) avanti.setVisible(false);
+                if (partecipa != null) partecipa.setVisible(false);
+
+                return;
+            }
+        });
+
+
+    }
+
+
+
+    private void gestisciDashboardOrganizzatore(Organizzatore organizzatore){
             JLabel messaggioBenvenuto2 = dashboardOrganizzatore.getMessaggioBenvenuto2();
             frame2 = new JFrame("HackatonDashboard - Organizzatore" );
             frame2.setContentPane(dashboardOrganizzatore.getDashboardOrganizzatore());
@@ -1984,6 +2302,30 @@ public class Controller {
         // Nessun wizard attivo
         guida.setText("");
     }
+
+    // Guida per la dashboard Giudice in base allo stato del wizard invito
+    private void aggiornaGuidaDashboardGiudice() {
+        if (dashboardGiudice == null) return;
+
+        JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+        if (guida == null) return;
+
+        guida.setForeground(Color.WHITE);
+
+        // Wizard ACCETTAZIONE INVITO (Visualizza inviti)
+        if (passoInvitoG >= 0) {
+            if (passoInvitoG == 0) {
+                guida.setText("<html>Inserisci il titolo<br>dell'hackathon che vuoi accettare.</html>");
+            } else if (passoInvitoG == 1) {
+                guida.setText("<html>Clicca 'Partecipa'<br>per accettare l'invito.</html>");
+            }
+            return;
+        }
+
+        // Nessun wizard attivo
+        guida.setText("");
+    }
+
 
     // Restituisce una anteprima del documento: max 5 righe e ~300 caratteri
     private String anteprimaDocumento(String contenuto) {

@@ -17,5 +17,11 @@ public interface HackathonDAO {
     List<String> listaGiudiciInvitati(String titoloHackathon, String organizzatoreEmail);
 
     List<Hackathon> findByUtenteIscritto(String emailUtente);
+
+    List<Hackathon> findInvitiPerGiudice(String emailGiudice);
+
+    boolean accettaInvitoGiudice(String titoloHackathon, String giudiceEmail);
+
+
 }
 
