@@ -44,6 +44,8 @@ public class Controller {
     private ArrayList<String> datiIscrizioneU = new ArrayList<>();
     private int passoTeamU = -1;
     private ArrayList<String> datiTeamU = new ArrayList<>();
+    private int passoDocumentoU = -1;
+    private ArrayList<String> datiDocumentoU = new ArrayList<>();
 
 
 
@@ -240,6 +242,15 @@ public class Controller {
                         trovato = true;
                         textArea.append("Titolo: " + h.getTitolo() + "\n");
                         textArea.append("Organizzatore: " + h.getOrganizzatore() + "\n");
+
+
+                        LocalDate inizioHack = parseLocalDateFlex(h.getInizio());
+                        if (inizioHack != null) {
+                            textArea.append("Inizio hackathon: " + formatDMY(inizioHack) + "\n");
+                        } else if (h.getInizio() != null) {
+                            // fallback se il parse fallisce ma la stringa c'è
+                            textArea.append("Inizio hackathon: " + h.getInizio() + "\n");
+                        }
                         textArea.append("Iscrizioni: " + formatDMY(inizio) + " → " + formatDMY(fine) + "\n");
                         textArea.append("-------------------------------------\n");
                     }
@@ -352,6 +363,171 @@ public class Controller {
             });
 
 
+            // ===== I miei Team =====
+            dashboardUtente.getIMieiTeam().addActionListener(e -> {
+                passoIscrizioneU = -1;
+                datiIscrizioneU.clear();
+                passoTeamU = -1;
+                datiTeamU.clear();
+
+                passoDocumentoU = 0;
+                datiDocumentoU.clear();
+
+
+                dashboardUtente.getPannelloLogico().setVisible(true);
+                dashboardUtente.getScrollPaneVisualizza().setVisible(true);
+                dashboardUtente.getAreaDiTesto().setVisible(true);
+                dashboardUtente.getTextAreaVisualizza().setVisible(true);
+
+
+                dashboardUtente.getFieldScrittura().setVisible(true);
+                dashboardUtente.getAvantiButton().setVisible(true);
+                dashboardUtente.getIndietroButton().setVisible(true);
+                dashboardUtente.getIscrivitiButton().setVisible(false);
+                dashboardUtente.getIscrivitiButton().setText("Carica documento");
+
+
+                JTextArea textArea = dashboardUtente.getTextAreaVisualizza();
+                JScrollPane scrollPane = dashboardUtente.getScrollPaneVisualizza();
+                Color bg = dashboardUtente.getPannelloLogico().getBackground();
+
+                textArea.setEditable(false);
+                textArea.setFocusable(false);
+                textArea.setBackground(bg);
+                textArea.setForeground(Color.WHITE);
+                textArea.setLineWrap(false);
+                textArea.setWrapStyleWord(false);
+                scrollPane.getViewport().setBackground(bg);
+                scrollPane.setBorder(null);
+
+                textArea.setText("");
+                textArea.append("--- I miei Team ---\n\n");
+
+                // Setup parte procedurale sopra
+                dashboardUtente.getAreaDiTesto().setText(
+                        "<html><b>Caricamento documento</b><br><br>" +
+                                "<b>Hackathon:</b> —<br>" +
+                                "<b>Team:</b> —<br>" +
+                                "<b>Contenuto:</b> —</html>"
+                );
+
+                dashboardUtente.getFieldScrittura().setText("");
+                aggiornaGuidaDashboardUtente();
+                dashboardUtente.getFieldScrittura().requestFocusInWindow();
+
+
+                dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                java.util.List<model.TeamInfo> mieiTeam = tdao.findTeamsByUtente(utente.getMail());
+
+                JLabel guida = dashboardUtente.getMessaggioErroreOrg();
+
+                if (mieiTeam.isEmpty()) {
+                    textArea.append("Non fai parte di alcun team.\n");
+
+                    // disattivo il wizard documento
+                    passoDocumentoU = -1;
+                    datiDocumentoU.clear();
+
+
+                    dashboardUtente.getFieldScrittura().setVisible(false);
+                    dashboardUtente.getAvantiButton().setVisible(false);
+                    dashboardUtente.getIndietroButton().setVisible(false);
+                    dashboardUtente.getIscrivitiButton().setVisible(false);
+
+
+                    guida.setForeground(Color.WHITE);
+                    guida.setText("");
+
+
+                    dashboardUtente.getAreaDiTesto().setText("<html><b>I miei team</b></html>");
+                    return;
+                }
+
+                // preparo DAO extra fuori dal ciclo (sopra al for)
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                dao.DocumentoDAO ddao = new daoImpl.DocumentoDAOImpl();
+                java.util.List<model.Hackathon> tuttiHackathon = hdao.findAll();
+
+                for (model.TeamInfo info : mieiTeam) {
+
+                    String titoloHackathon = info.getTitoloHackathon();
+                    String nomeTeam = info.getNomeTeam();
+
+                    // --- Data di inizio hackathon ---
+                    String dataInizioStr = "—";
+                    Long hackathonId = null;
+                    if (titoloHackathon != null) {
+                        String titoloNorm = titoloHackathon.trim();
+
+                        model.Hackathon trovato = null;
+                        for (model.Hackathon h : tuttiHackathon) {
+                            String t = (h.getTitolo() == null) ? "" : h.getTitolo().trim();
+                            if (t.equalsIgnoreCase(titoloNorm)) {
+                                trovato = h;
+                                break;
+                            }
+                        }
+
+                        if (trovato != null) {
+                            LocalDate inizio = parseLocalDateFlex(trovato.getInizio());
+                            if (inizio != null) {
+                                dataInizioStr = formatDMY(inizio);
+                            } else {
+                                dataInizioStr = trovato.getInizio(); // fallback stringa grezza
+                            }
+
+                            hackathonId = hdao.findIdByTitolo(trovato.getTitolo());
+                        }
+                    }
+
+                    textArea.append("Hackathon: " + titoloHackathon + "\n");
+                    textArea.append("Inizio: " + dataInizioStr + "\n");
+                    textArea.append("Team: " + nomeTeam);
+                    if (info.isCreatore(utente.getMail())) {
+                        textArea.append(" (creatore)");
+                    }
+                    textArea.append("\n");
+
+                    // --- Membri ---
+                    textArea.append("Membri (" + info.getNumeroMembri() + "): ");
+
+                    java.util.List<String> membri = tdao.findMembriTeam(info.getId());
+                    if (membri.isEmpty()) {
+                        textArea.append("nessuno\n");
+                    } else {
+                        for (int i = 0; i < membri.size(); i++) {
+                            textArea.append(membri.get(i));
+                            if (i < membri.size() - 1) {
+                                textArea.append(", ");
+                            }
+                        }
+                        textArea.append("\n");
+                    }
+
+                    // --- Ultimo documento caricato (se c'è) ---
+                    if (hackathonId != null) {
+                        String contenuto = ddao.trovaUltimoDocumento(info.getId(), hackathonId);
+
+                        if (contenuto == null || contenuto.trim().isEmpty()) {
+                            textArea.append("Ultimo documento: nessun documento caricato.\n");
+                        } else {
+                            String anteprima = anteprimaDocumento(contenuto);
+                            textArea.append("Ultimo documento:\n");
+                            textArea.append(anteprima + "\n");
+                        }
+                    } else {
+                        textArea.append("Ultimo documento: dati hackathon non disponibili.\n");
+                    }
+
+                    textArea.append("\n"); // separatore tra team
+                }
+
+
+                aggiornaGuidaDashboardUtente();
+            });
+
+
+
 
 
             dashboardUtente.getAvantiButton().addActionListener(e -> {
@@ -390,7 +566,7 @@ public class Controller {
                             return;
                         }
 
-                        // verifica finestra iscrizioni con LocalDate (stessi helper della lista)
+                        // verifica finestra iscrizioni con LocalDate
                         java.time.LocalDate oggi = today();
                         java.time.LocalDate inizio = parseLocalDateFlex(target.getInizioIscrizioni());
                         java.time.LocalDate fine = parseLocalDateFlex(target.getFineIscrizioni());
@@ -406,7 +582,7 @@ public class Controller {
                             return;
                         }
 
-                        // ID reale dal DB (niente getId sul model)
+                        // ID reale dal DB
                         Long hackathonId = hdao.findIdByTitolo(target.getTitolo());
                         if (hackathonId == null) {
                             guida.setForeground(new Color(180, 26, 0));
@@ -566,8 +742,154 @@ public class Controller {
                     return; // fine ramo team
                 }
 
+                // --------------------------------------------------------
+                // 3) WIZARD DOCUMENTO (I miei Team → Carica documento)
+                // --------------------------------------------------------
+                if (passoDocumentoU >= 0) {
+
+                    // STEP 0: inserimento nome team
+                    if (passoDocumentoU == 0) {
+                        String nomeTeamInput = dashboardUtente.getFieldScrittura().getText();
+                        String nomeTeam = (nomeTeamInput == null) ? "" : nomeTeamInput.trim();
+
+                        if (nomeTeam.isEmpty()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Il nome del team<br>non può essere vuoto.</html>");
+                            return;
+                        }
+
+                        dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                        java.util.List<model.TeamInfo> mieiTeam = tdao.findTeamsByUtente(utente.getMail());
+
+                        model.TeamInfo selezionato = null;
+                        for (model.TeamInfo info : mieiTeam) {
+                            if (info.getNomeTeam() != null &&
+                                    info.getNomeTeam().trim().equalsIgnoreCase(nomeTeam)) {
+                                selezionato = info;
+                                break; // assumiamo un solo team con quel nome
+                            }
+                        }
+
+                        if (selezionato == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Nessun team trovato<br>con questo nome.</html>");
+                            return;
+                        }
+
+                        String titoloHackathon = selezionato.getTitoloHackathon();
+
+                        // Recupero l'hackathon per verificare la data di inizio
+                        dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                        java.util.List<model.Hackathon> hackathonUtente =
+                                hdao.findByUtenteIscritto(utente.getMail());
+
+                        model.Hackathon hTarget = null;
+                        for (model.Hackathon h : hackathonUtente) {
+                            if (h.getTitolo() != null &&
+                                    h.getTitolo().trim().equalsIgnoreCase(titoloHackathon.trim())) {
+                                hTarget = h;
+                                break;
+                            }
+                        }
+
+                        if (hTarget == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Impossibile recuperare<br>i dati dell'hackathon.</html>");
+                            return;
+                        }
+
+                        // Controllo: documento solo da quando l'hackathon è iniziato
+                        java.time.LocalDate oggi = today();
+                        java.time.LocalDate inizioHackathon = parseLocalDateFlex(hTarget.getInizio());
+                        if (inizioHackathon == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Data di inizio hackathon<br>non valida.</html>");
+                            return;
+                        }
+
+                        if (oggi.isBefore(inizioHackathon)) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Puoi caricare documenti<br>solo da inizio hackathon.</html>");
+                            return;
+                        }
+
+                        // Recupero ID reali dal DB
+                        Long hackathonId = hdao.findIdByTitolo(titoloHackathon);
+                        if (hackathonId == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Impossibile recuperare<br>l'ID dell'hackathon.</html>");
+                            return;
+                        }
+                        long teamId = selezionato.getId();
+
+                        // Salvo dati del wizard
+                        datiDocumentoU.clear();
+                        datiDocumentoU.add(nomeTeam);                     // 0
+                        datiDocumentoU.add(titoloHackathon);              // 1
+                        datiDocumentoU.add(String.valueOf(teamId));       // 2
+                        datiDocumentoU.add(String.valueOf(hackathonId));  // 3
+
+                        passoDocumentoU = 1;
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Caricamento documento</b><br><br>" +
+                                        "<b>Hackathon:</b> " + titoloHackathon + "<br>" +
+                                        "<b>Team:</b> " + nomeTeam + "<br>" +
+                                        "<b>Contenuto:</b> —</html>"
+                        );
+                        aggiornaGuidaDashboardUtente();
+                        dashboardUtente.getFieldScrittura().setText("");
+                        dashboardUtente.getFieldScrittura().requestFocusInWindow();
+                        return;
+                    }
+
+                    // STEP 1: inserimento contenuto documento
+                    if (passoDocumentoU == 1) {
+                        if (datiDocumentoU.size() < 4) return;
+
+                        String contenutoInput = dashboardUtente.getFieldScrittura().getText();
+                        String contenuto = (contenutoInput == null) ? "" : contenutoInput.trim();
+
+                        if (contenuto.isEmpty()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Il contenuto del documento<br>non può essere vuoto.</html>");
+                            return;
+                        }
+
+                        // salvo contenuto in posizione 4
+                        if (datiDocumentoU.size() == 4) datiDocumentoU.add(contenuto);
+                        else datiDocumentoU.set(4, contenuto);
+
+                        passoDocumentoU = 2;
+
+                        String nomeTeam = datiDocumentoU.get(0);
+                        String titoloHackathon = datiDocumentoU.get(1);
+
+
+                        String contenutoPreview = limitaPerAreaDiTesto(contenuto, 120);
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Caricamento documento</b><br><br>" +
+                                        "<b>Hackathon:</b> " + titoloHackathon + "<br>" +
+                                        "<b>Team:</b> " + nomeTeam + "<br>" +
+                                        "<b>Contenuto:</b> " + contenutoPreview + "</html>"
+                        );
+
+
+                        dashboardUtente.getAvantiButton().setVisible(false);
+                        dashboardUtente.getIscrivitiButton().setVisible(true);
+                        dashboardUtente.getIscrivitiButton().setText("Carica documento");
+                        dashboardUtente.getFieldScrittura().setText("");
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+
+                    return; // fine ramo documento
+                }
+
                 // nessun wizard attivo → non fare nulla
             });
+
 
 
 
@@ -576,6 +898,52 @@ public class Controller {
                 JLabel guida = dashboardUtente.getMessaggioErroreOrg();
                 guida.setForeground(Color.WHITE);
                 aggiornaGuidaDashboardUtente();
+
+                // 0) wizard DOCUMENTO
+                if (passoDocumentoU >= 0) {
+
+                    if (passoDocumentoU == 1) {
+                        // torna alla scelta del team
+                        passoDocumentoU = 0;
+                        datiDocumentoU.clear();
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Caricamento documento</b><br><br>" +
+                                        "<b>Hackathon:</b> —<br>" +
+                                        "<b>Team:</b> —<br>" +
+                                        "<b>Contenuto:</b> —</html>"
+                        );
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+                        dashboardUtente.getFieldScrittura().setText("");
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+
+                    if (passoDocumentoU == 2) {
+                        // torna a inserimento contenuto
+                        passoDocumentoU = 1;
+
+                        String nomeTeam = (datiDocumentoU.size() > 0) ? datiDocumentoU.get(0) : "—";
+                        String titoloHackathon = (datiDocumentoU.size() > 1) ? datiDocumentoU.get(1) : "—";
+                        String contenuto = (datiDocumentoU.size() > 4) ? datiDocumentoU.get(4) : "";
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Caricamento documento</b><br><br>" +
+                                        "<b>Hackathon:</b> " + titoloHackathon + "<br>" +
+                                        "<b>Team:</b> " + nomeTeam + "<br>" +
+                                        "<b>Contenuto:</b> —</html>"
+                        );
+
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+                        dashboardUtente.getFieldScrittura().setText(contenuto);
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+                }
+
+
                 // 1) wizard TEAM
                 if (passoTeamU >= 0) {
 
@@ -638,6 +1006,47 @@ public class Controller {
 
                 JLabel guida = dashboardUtente.getMessaggioErroreOrg();
                 guida.setForeground(java.awt.Color.WHITE);
+
+                // --------------------------------------------------------
+// 0) Conferma CARICAMENTO DOCUMENTO
+// --------------------------------------------------------
+                if (passoDocumentoU == 2 && datiDocumentoU.size() >= 5) {
+
+                    String nomeTeam = datiDocumentoU.get(0);
+                    String titoloHackathon = datiDocumentoU.get(1);
+                    long teamId = Long.parseLong(datiDocumentoU.get(2));
+                    long hackathonId = Long.parseLong(datiDocumentoU.get(3));
+                    String contenuto = datiDocumentoU.get(4);
+
+                    try {
+                        dao.DocumentoDAO ddao = new daoImpl.DocumentoDAOImpl();
+                        ddao.salvaDocumento(teamId, hackathonId, contenuto, java.time.LocalDateTime.now());
+
+                        javax.swing.JOptionPane.showMessageDialog(frame2,
+                                "Documento caricato per il team \"" + nomeTeam +
+                                        "\" nell'hackathon \"" + titoloHackathon + "\".",
+                                "Documento caricato",
+                                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+                        // reset wizard documento
+                        passoDocumentoU = -1;
+                        datiDocumentoU.clear();
+                        dashboardUtente.getFieldScrittura().setText("");
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+
+                        // ricarico "I miei Team"
+                        dashboardUtente.getIMieiTeam().doClick();
+
+                    } catch (Exception ex) {
+                        guida.setForeground(new java.awt.Color(180, 26, 0));
+                        guida.setText("<html>Errore durante il caricamento<br>del documento: " + ex.getMessage() + "</html>");
+                    }
+                    return;
+                }
+
+
+
 
                 // --------------------------------------------------------
                 // 1) Conferma CREAZIONE TEAM
@@ -761,6 +1170,8 @@ public class Controller {
                     guida.setText("Errore durante l'iscrizione: " + ex.getMessage());
                 }
             });
+
+
 
 
 
@@ -1408,9 +1819,72 @@ public class Controller {
             }
             return;
         }
+        if (passoDocumentoU >= 0) {
+
+            guida.setForeground(Color.WHITE);
+
+            if (passoDocumentoU == 0) {
+                guida.setText("<html>Inserisci il nome<br>del team.</html>");
+            } else if (passoDocumentoU == 1) {
+                guida.setText("<html>Scrivi il contenuto<br>del documento.</html>");
+            } else if (passoDocumentoU == 2) {
+                guida.setText("<html>Clicca 'Carica documento'<br>per confermare.</html>");
+            }
+            return;
+        }
 
         // Nessun wizard attivo
         guida.setText("");
+    }
+
+    // Restituisce una anteprima del documento: max 5 righe e ~300 caratteri
+    private String anteprimaDocumento(String contenuto) {
+        if (contenuto == null) return "";
+        contenuto = contenuto.trim();
+        if (contenuto.isEmpty()) return "";
+
+        int maxRighe = 5;
+        int maxChar = 300;
+
+        String[] righe = contenuto.split("\\R"); // split su \n, \r\n, ecc.
+        StringBuilder sb = new StringBuilder();
+        int righeUsate = 0;
+
+        for (String riga : righe) {
+            if (righeUsate >= maxRighe) break;
+
+            // se supero il limite di caratteri, taglio l'ultima riga
+            if (sb.length() + riga.length() + 1 > maxChar) {
+                int spazio = maxChar - sb.length();
+                if (spazio > 0) {
+                    if (sb.length() > 0) sb.append("\n");
+                    if (riga.length() > spazio) {
+                        sb.append(riga, 0, spazio);
+                    } else {
+                        sb.append(riga);
+                    }
+                }
+                righeUsate++;
+                break;
+            } else {
+                if (sb.length() > 0) sb.append("\n");
+                sb.append(riga);
+                righeUsate++;
+            }
+        }
+
+        if (sb.length() < contenuto.length()) {
+            sb.append("...");
+        }
+
+        return sb.toString();
+    }
+
+    private String limitaPerAreaDiTesto(String s, int max) {
+        if (s == null) return "";
+        String trimmed = s.trim();
+        if (trimmed.length() <= max) return trimmed;
+        return trimmed.substring(0, max) + "...";
     }
 
 }

@@ -17,7 +17,7 @@ public class DashboardUtente {
     private JLabel messaggioBenvenuto;
     private JPanel pannelloBottoni;
     private JButton hackatonDisponibili;
-    private JButton invitaGiudiciButton;
+    private JButton iMieiTeam;
     private JButton iMieiHackaton;
     private JPanel pannelloLogic;
     private JScrollPane scrollPaneVisualizza;
@@ -76,17 +76,17 @@ public class DashboardUtente {
         hackatonDisponibili.setRequestFocusEnabled(true);
         hackatonDisponibili.setText("Hackaton Disponibili");
         pannelloBottoni.add(hackatonDisponibili, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
-        invitaGiudiciButton = new JButton();
-        invitaGiudiciButton.setBackground(new Color(-13877680));
-        invitaGiudiciButton.setFocusable(false);
-        Font invitaGiudiciButtonFont = this.$$$getFont$$$("Inter", -1, -1, invitaGiudiciButton.getFont());
-        if (invitaGiudiciButtonFont != null) invitaGiudiciButton.setFont(invitaGiudiciButtonFont);
-        invitaGiudiciButton.setForeground(new Color(-1));
-        invitaGiudiciButton.setHorizontalTextPosition(4);
-        invitaGiudiciButton.setIconTextGap(6);
-        invitaGiudiciButton.setRequestFocusEnabled(true);
-        invitaGiudiciButton.setText("Invita Giudici");
-        pannelloBottoni.add(invitaGiudiciButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
+        iMieiTeam = new JButton();
+        iMieiTeam.setBackground(new Color(-13877680));
+        iMieiTeam.setFocusable(false);
+        Font iMieiTeamFont = this.$$$getFont$$$("Inter", -1, -1, iMieiTeam.getFont());
+        if (iMieiTeamFont != null) iMieiTeam.setFont(iMieiTeamFont);
+        iMieiTeam.setForeground(new Color(-1));
+        iMieiTeam.setHorizontalTextPosition(4);
+        iMieiTeam.setIconTextGap(6);
+        iMieiTeam.setRequestFocusEnabled(true);
+        iMieiTeam.setText("I miei Team");
+        pannelloBottoni.add(iMieiTeam, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
         iMieiHackaton = new JButton();
         iMieiHackaton.setBackground(new Color(-13877680));
         iMieiHackaton.setFocusable(false);
@@ -128,7 +128,7 @@ public class DashboardUtente {
         if (AreaDiTestoFont != null) AreaDiTesto.setFont(AreaDiTestoFont);
         AreaDiTesto.setForeground(new Color(-1));
         AreaDiTesto.setText("Label");
-        pannelloLogic.add(AreaDiTesto, new GridConstraints(0, 1, 1, 3, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pannelloLogic.add(AreaDiTesto, new GridConstraints(0, 1, 1, 3, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(200, 200), new Dimension(200, 200), new Dimension(200, 200), 0, false));
         scrollPaneVisualizza = new JScrollPane();
         scrollPaneVisualizza.setFocusable(true);
         Font scrollPaneVisualizzaFont = this.$$$getFont$$$("Inter", -1, 14, scrollPaneVisualizza.getFont());
@@ -259,6 +259,11 @@ public class DashboardUtente {
 
     public JButton getIMieiHackaton() {
         return iMieiHackaton;
+    }
+
+
+    public JButton getIMieiTeam() {
+        return iMieiTeam;
     }
 
 }

@@ -50,7 +50,7 @@
               <text value="Hackaton Disponibili"/>
             </properties>
           </component>
-          <component id="79fa0" class="javax.swing.JButton" binding="invitaGiudiciButton" default-binding="true">
+          <component id="79fa0" class="javax.swing.JButton" binding="iMieiTeam">
             <constraints>
               <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                 <minimum-size width="175" height="35"/>
@@ -66,7 +66,7 @@
               <horizontalTextPosition value="4"/>
               <iconTextGap value="6"/>
               <requestFocusEnabled value="true"/>
-              <text value="Invita Giudici"/>
+              <text value="I miei Team"/>
             </properties>
           </component>
           <component id="baaad" class="javax.swing.JButton" binding="iMieiHackaton">
@@ -133,7 +133,11 @@
         <children>
           <component id="5da0e" class="javax.swing.JLabel" binding="AreaDiTesto">
             <constraints>
-              <grid row="0" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
+              <grid row="0" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="0" use-parent-layout="false">
+                <minimum-size width="200" height="200"/>
+                <preferred-size width="200" height="200"/>
+                <maximum-size width="200" height="200"/>
+              </grid>
             </constraints>
             <properties>
               <background color="-10658467"/>

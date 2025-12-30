@@ -2,6 +2,10 @@ package daoImpl;
 
 import dao.TeamDAO;
 import database.Database;
+import model.TeamInfo;
+import java.util.ArrayList;
+import java.util.List;
+
 
 import java.sql.*;
 
@@ -76,4 +80,75 @@ public class TeamDAOImpl implements TeamDAO {
         }
         throw new RuntimeException("Impossibile creare il team");
     }
+
+
+    @Override
+    public List<TeamInfo> findTeamsByUtente(String emailUtente) {
+        String sql = """
+            SELECT t.id,
+                   t.nome             AS team_nome,
+                   h.titolo           AS hackathon_titolo,
+                   t.creatore_email   AS creatore_email,
+                   COUNT(tm2.utente_email) AS num_membri
+            FROM team t
+            JOIN team_membro tm
+              ON tm.team_id = t.id
+             AND tm.utente_email = ?
+            JOIN hackathon h
+              ON h.id = t.hackathon_id
+            LEFT JOIN team_membro tm2
+              ON tm2.team_id = t.id
+            GROUP BY t.id, t.nome, h.titolo, t.creatore_email
+            ORDER BY h.titolo, t.nome
+            """;
+
+        List<TeamInfo> result = new ArrayList<>();
+
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setString(1, emailUtente);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    long id = rs.getLong("id");
+                    String nomeTeam = rs.getString("team_nome");
+                    String titoloH = rs.getString("hackathon_titolo");
+                    String creatore = rs.getString("creatore_email");
+                    int numMembri = rs.getInt("num_membri");
+
+                    result.add(new TeamInfo(id, nomeTeam, titoloH, creatore, numMembri));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore nel recupero dei team dell'utente", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public List<String> findMembriTeam(long teamId) {
+        String sql = "SELECT utente_email FROM team_membro WHERE team_id = ? ORDER BY utente_email";
+        List<String> result = new ArrayList<>();
+
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setLong(1, teamId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getString("utente_email"));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore nel recupero dei membri del team", e);
+        }
+
+        return result;
+    }
+
 }
