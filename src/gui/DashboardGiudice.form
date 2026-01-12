@@ -24,7 +24,7 @@
       <vspacer id="a538a">
         <constraints border-constraint="West"/>
       </vspacer>
-      <grid id="aa1fc" binding="pannelloBottoni" layout-manager="GridLayoutManager" row-count="7" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="aa1fc" binding="pannelloBottoni" layout-manager="GridLayoutManager" row-count="6" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="15" left="15" bottom="15" right="15"/>
         <constraints border-constraint="East"/>
         <properties>
@@ -37,7 +37,7 @@
         <children>
           <vspacer id="d38">
             <constraints>
-              <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+              <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
             </constraints>
           </vspacer>
           <component id="ad131" class="javax.swing.JButton" binding="visualizzaInvitiButton">
@@ -60,7 +60,7 @@
               <text value="Visualizza Inviti"/>
             </properties>
           </component>
-          <component id="5f0dc" class="javax.swing.JButton" binding="iMieiTeam">
+          <component id="5f0dc" class="javax.swing.JButton" binding="valutaTeamButton">
             <constraints>
               <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                 <minimum-size width="175" height="35"/>
@@ -76,10 +76,10 @@
               <horizontalTextPosition value="4"/>
               <iconTextGap value="6"/>
               <requestFocusEnabled value="true"/>
-              <text value="I miei Team"/>
+              <text value="Valuta un Team"/>
             </properties>
           </component>
-          <component id="2a534" class="javax.swing.JButton" binding="iMieiHackaton">
+          <component id="2a534" class="javax.swing.JButton" binding="hackatonAssegnati">
             <constraints>
               <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                 <minimum-size width="175" height="35"/>
@@ -95,20 +95,9 @@
               <horizontalTextPosition value="4"/>
               <iconTextGap value="6"/>
               <requestFocusEnabled value="true"/>
-              <text value="I miei Hackaton"/>
+              <text value="Hackaton assegnati"/>
             </properties>
           </component>
-          <grid id="77fe1" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-            <margin top="0" left="0" bottom="0" right="0"/>
-            <constraints>
-              <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <visible value="false"/>
-            </properties>
-            <border type="none"/>
-            <children/>
-          </grid>
           <component id="52f35" class="javax.swing.JLabel" binding="messaggioBenvenuto">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="5" fill="0" indent="0" use-parent-layout="false"/>

@@ -12,21 +12,23 @@ import java.util.List;
 
 public class ClassificaDAOImpl implements ClassificaDAO {
 
+
     @Override
     public List<Classifica> findClassificaByHackathon(long hackathonId) {
 
+        // Punteggio totale = somma dei voti di tutti i giudici (non media)
         String sql = """
-            SELECT t.id      AS team_id,
-                   t.nome    AS team_nome,
-                   COALESCE(AVG(v.valore), 0) AS punteggio
-            FROM team t
-            LEFT JOIN voto v
-              ON v.team_id = t.id
-             AND v.hackathon_id = ?
-            WHERE t.hackathon_id = ?
-            GROUP BY t.id, t.nome
-            ORDER BY punteggio DESC, t.nome ASC
-            """;
+        SELECT t.id      AS team_id,
+               t.nome    AS team_nome,
+               COALESCE(SUM(v.valore), 0) AS punteggio
+        FROM team t
+        LEFT JOIN voto v
+          ON v.team_id = t.id
+         AND v.hackathon_id = ?
+        WHERE t.hackathon_id = ?
+        GROUP BY t.id, t.nome
+        ORDER BY punteggio DESC, t.nome ASC
+        """;
 
         List<Classifica> result = new ArrayList<>();
 
@@ -39,18 +41,13 @@ public class ClassificaDAOImpl implements ClassificaDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String nomeTeam = rs.getString("team_nome");
-                    double punteggioMedio = rs.getDouble("punteggio");
+                    int punteggioTotale = rs.getInt("punteggio");
 
-                    // crea il Team e impostane il nome
-                    model.Team team = new model.Team(null); // l'Hackathon qui non ti serve
+                    Team team = new Team(null);
                     team.setNome(nomeTeam);
 
-                    int punteggioInt = (int) Math.round(punteggioMedio);
-
-                    // usa il costruttore Classifica(Team, int) che hai già
-                    result.add(new model.Classifica(team, punteggioInt));
+                    result.add(new Classifica(team, punteggioTotale));
                 }
-
             }
 
         } catch (SQLException e) {
@@ -59,4 +56,5 @@ public class ClassificaDAOImpl implements ClassificaDAO {
 
         return result;
     }
+
 }

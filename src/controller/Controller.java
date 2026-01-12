@@ -48,6 +48,16 @@ public class Controller {
     private ArrayList<String> datiDocumentoU = new ArrayList<>();
     private int passoInvitoG = -1;
     private java.util.List<String> datiInvitoG = new java.util.ArrayList<>();
+    private int passoProblemaG = -1;
+    private ArrayList<String> datiProblemaG = new ArrayList<>();
+    private int passoTeamG = -1;
+    private ArrayList<String> datiTeamG = new ArrayList<>();
+    private int passoClassificaG = -1;
+    private ArrayList<String> datiClassificaG = new ArrayList<>();
+    private int passoInvitoTeamU = -1;
+    private ArrayList<String> datiInvitoTeamU = new ArrayList<>();
+
+
 
 
 
@@ -526,20 +536,26 @@ public class Controller {
                     // --- Problema e commenti dei giudici ---
                     if (hackathonId != null) {
                         // PROBLEMA
-                        model.Problema problema = pdao.trovaPerHackathon(hackathonId);
-                        if (problema == null) {
-                            textArea.append("Problema: nessun problema pubblicato.\n");
-                        } else {
-                            String descr = problema.getDescrizione();
-                            if (descr != null && descr.length() > 150) {
-                                descr = descr.substring(0, 150) + "...";
-                            }
-                            String emailGiudice = (problema.getGiudice() != null)
-                                    ? problema.getGiudice().getMail()
-                                    : "?";
+                        // PROBLEMI (stampa numerata)
+                        java.util.List<model.Problema> problemi = pdao.trovaTuttiPerHackathon(hackathonId);
 
-                            textArea.append("Problema: \"" + descr + "\" (Giudice: " + emailGiudice + ")\n");
+                        if (problemi.isEmpty()) {
+                            textArea.append("Problemi: nessun problema pubblicato.\n");
+                        } else {
+                            int i = 1;
+                            for (model.Problema p : problemi) {
+                                String descr = (p.getDescrizione() == null) ? "" : p.getDescrizione().replace("\n", " ").trim();
+                                if (descr.length() > 150) descr = descr.substring(0, 150) + "...";
+
+                                String emailGiudice = (p.getGiudice() != null && p.getGiudice().getMail() != null)
+                                        ? p.getGiudice().getMail()
+                                        : "?";
+
+                                textArea.append("Problema " + i + ") \"" + descr + "\" giudice: " + emailGiudice + "\n");
+                                i++;
+                            }
                         }
+
 
                         // COMMENTI
                         java.util.List<model.CommentoInfo> commenti =
@@ -570,6 +586,90 @@ public class Controller {
                 aggiornaGuidaDashboardUtente();
             });
 
+            // ===== Invia invito Team =====
+            dashboardUtente.getInviaInvitoButton().addActionListener(e -> {
+
+                // reset altri wizard (per non sovrapporre bottoni/step)
+                passoIscrizioneU = -1; datiIscrizioneU.clear();
+                passoTeamU = -1; datiTeamU.clear();
+                passoDocumentoU = -1; datiDocumentoU.clear();
+
+                // attivo wizard invito team
+                passoInvitoTeamU = 0;
+                datiInvitoTeamU.clear();
+
+                dashboardUtente.getPannelloLogico().setVisible(true);
+                dashboardUtente.getScrollPaneVisualizza().setVisible(true);
+                dashboardUtente.getAreaDiTesto().setVisible(true);
+                dashboardUtente.getTextAreaVisualizza().setVisible(true);
+
+                dashboardUtente.getFieldScrittura().setVisible(true);
+                dashboardUtente.getAvantiButton().setVisible(true);
+                dashboardUtente.getIndietroButton().setVisible(true);
+
+                dashboardUtente.getIscrivitiButton().setVisible(false);
+                dashboardUtente.getIscrivitiButton().setText("Invita");
+
+                dashboardUtente.getAreaDiTesto().setText(
+                        "<html><b>Invia invito Team</b><br><br><b>Team:</b> —<br><b>Email:</b> —</html>"
+                );
+
+                aggiornaGuidaDashboardUtente();
+
+                JTextArea textArea = dashboardUtente.getTextAreaVisualizza();
+                JScrollPane scrollPane = dashboardUtente.getScrollPaneVisualizza();
+                Color bg = dashboardUtente.getPannelloLogico().getBackground();
+
+                textArea.setEditable(false);
+                textArea.setFocusable(false);
+                textArea.setBackground(bg);
+                textArea.setForeground(Color.WHITE);
+                textArea.setLineWrap(false);
+                textArea.setWrapStyleWord(false);
+                scrollPane.getViewport().setBackground(bg);
+                scrollPane.setBorder(null);
+
+                textArea.setText("");
+                textArea.append("--- I miei Team (Inviti) ---\n\n");
+
+                dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                java.util.List<model.TeamInfo> mieiTeam = tdao.findTeamsByUtente(utente.getMail());
+
+                if (mieiTeam.isEmpty()) {
+                    textArea.append("Non fai parte di alcun team.\n");
+                    // niente wizard se non hai team
+                    passoInvitoTeamU = -1;
+                    datiInvitoTeamU.clear();
+                    dashboardUtente.getFieldScrittura().setVisible(false);
+                    dashboardUtente.getAvantiButton().setVisible(false);
+                    dashboardUtente.getIndietroButton().setVisible(false);
+                    dashboardUtente.getIscrivitiButton().setVisible(false);
+                    dashboardUtente.getMessaggioErroreOrg().setText("");
+                    dashboardUtente.getAreaDiTesto().setText("<html><b>Invia invito Team</b></html>");
+                    return;
+                }
+
+                for (model.TeamInfo info : mieiTeam) {
+                    textArea.append("Hackathon: " + info.getTitoloHackathon() + "\n");
+                    textArea.append("Team: \"" + info.getNomeTeam() + "\"\n");
+
+                    java.util.List<String> inv = tdao.findInvitiInviati(info.getId());
+                    if (inv.isEmpty()) {
+                        textArea.append("Inviti inviati: (nessuno)\n");
+                    } else {
+                        textArea.append("Inviti inviati:\n");
+                        for (String mail : inv) {
+                            textArea.append("  Utente: \"" + mail + "\"\n");
+                        }
+                    }
+                    textArea.append("-------------------------------------\n");
+                }
+
+                dashboardUtente.getFieldScrittura().setText("");
+                dashboardUtente.getFieldScrittura().requestFocusInWindow();
+            });
+
+
 
 
 
@@ -578,6 +678,108 @@ public class Controller {
 
                 JLabel guida = dashboardUtente.getMessaggioErroreOrg();
                 guida.setForeground(Color.WHITE);
+
+
+                // --------------------------------------------------------
+// 0) WIZARD INVITO TEAM (Invia invito al mio team)
+// --------------------------------------------------------
+                if (passoInvitoTeamU >= 0) {
+
+                    // STEP 0: nome team
+                    if (passoInvitoTeamU == 0) {
+                        String nomeTeamInput = dashboardUtente.getFieldScrittura().getText();
+                        String nomeTeam = (nomeTeamInput == null) ? "" : nomeTeamInput.trim();
+
+                        if (nomeTeam.isEmpty()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Il nome del team non può essere vuoto.");
+                            return;
+                        }
+
+                        dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                        java.util.List<model.TeamInfo> mieiTeam = tdao.findTeamsByUtente(utente.getMail());
+
+                        model.TeamInfo selezionato = null;
+                        for (model.TeamInfo info : mieiTeam) {
+                            if (info.getNomeTeam() != null && info.getNomeTeam().trim().equalsIgnoreCase(nomeTeam)) {
+                                selezionato = info;
+                                break;
+                            }
+                        }
+
+                        if (selezionato == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Team non trovato tra i tuoi.");
+                            return;
+                        }
+
+                        datiInvitoTeamU.clear();
+                        datiInvitoTeamU.add(String.valueOf(selezionato.getId())); // 0 teamId
+                        datiInvitoTeamU.add(selezionato.getNomeTeam());          // 1 nomeTeam
+
+                        passoInvitoTeamU = 1;
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Invia invito Team</b><br><br><b>Team:</b> " + selezionato.getNomeTeam() +
+                                        "<br><b>Email:</b> —</html>"
+                        );
+
+                        aggiornaGuidaDashboardUtente();
+                        dashboardUtente.getFieldScrittura().setText("");
+                        dashboardUtente.getFieldScrittura().requestFocusInWindow();
+                        return;
+                    }
+
+                    // STEP 1: email invitato (solo controllo, poi appare pulsante "Invita")
+                    if (passoInvitoTeamU == 1) {
+
+                        String emailInput = dashboardUtente.getFieldScrittura().getText();
+                        String emailInvitato = (emailInput == null) ? "" : emailInput.trim();
+
+                        if (emailInvitato.isEmpty()) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Email vuota.");
+                            return;
+                        }
+
+                        if (emailInvitato.equalsIgnoreCase(utente.getMail())) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Non puoi invitare te stesso.");
+                            return;
+                        }
+
+                        // check: deve essere un UTENTE (no giudice/organizzatore)
+                        dao.UtenteDAO udao = new daoImpl.UtenteDAOImpl();
+                        if (!udao.esisteUtente(emailInvitato, "utente")) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Email non associata a un utente.");
+                            return;
+                        }
+
+                        // salva email
+                        if (datiInvitoTeamU.size() == 2) datiInvitoTeamU.add(emailInvitato); // 2 email
+                        else datiInvitoTeamU.set(2, emailInvitato);
+
+                        passoInvitoTeamU = 2;
+
+                        String nomeTeam = datiInvitoTeamU.get(1);
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Invia invito Team</b><br><br><b>Team:</b> " + nomeTeam +
+                                        "<br><b>Email:</b> " + emailInvitato + "</html>"
+                        );
+
+                        // mostra bottone finale "Invita"
+                        dashboardUtente.getAvantiButton().setVisible(false);
+                        dashboardUtente.getIscrivitiButton().setVisible(true);
+                        dashboardUtente.getIscrivitiButton().setText("Invita");
+
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+
+                    return; // fine ramo invito team
+                }
+
 
                 // --------------------------------------------------------
                 // 1) WIZARD ISCRIZIONE (Hackaton Disponibili)
@@ -943,6 +1145,56 @@ public class Controller {
                 guida.setForeground(Color.WHITE);
                 aggiornaGuidaDashboardUtente();
 
+                // --------------------------------------------------------
+// WIZARD: INVIA INVITO TEAM
+// --------------------------------------------------------
+                // 0) wizard INVITO TEAM
+                if (passoInvitoTeamU >= 0) {
+
+                    // da step 2 (invita) torno a step 1 (email)
+                    if (passoInvitoTeamU == 2) {
+                        passoInvitoTeamU = 1;
+
+                        if (datiInvitoTeamU.size() >= 3) datiInvitoTeamU.remove(2);
+
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+
+                        String nomeTeam = (datiInvitoTeamU.size() > 1) ? datiInvitoTeamU.get(1) : "—";
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Invia invito Team</b><br><br><b>Team:</b> " + nomeTeam +
+                                        "<br><b>Email:</b> —</html>"
+                        );
+
+                        dashboardUtente.getFieldScrittura().setText("");
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+
+                    // da step 1 (email) torno a step 0 (nome team)
+                    if (passoInvitoTeamU == 1) {
+                        passoInvitoTeamU = 0;
+                        datiInvitoTeamU.clear();
+
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Invia invito Team</b><br><br><b>Team:</b> —<br><b>Email:</b> —</html>"
+                        );
+
+                        dashboardUtente.getFieldScrittura().setText("");
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+
+                    // step 0: resto allo step 0 (non esco)
+                    dashboardUtente.getFieldScrittura().setText("");
+                    aggiornaGuidaDashboardUtente();
+                    return;
+                }
+
+
                 // 0) wizard DOCUMENTO
                 if (passoDocumentoU >= 0) {
 
@@ -1050,6 +1302,51 @@ public class Controller {
 
                 JLabel guida = dashboardUtente.getMessaggioErroreOrg();
                 guida.setForeground(java.awt.Color.WHITE);
+
+
+                // --------------------------------------------------------
+// INVIA INVITO TEAM (bottone rinominato "Invita")
+// --------------------------------------------------------
+                if (passoInvitoTeamU == 2 && datiInvitoTeamU.size() >= 3) {
+
+                    long teamId = Long.parseLong(datiInvitoTeamU.get(0));
+                    String nomeTeam = datiInvitoTeamU.get(1);
+                    String emailInvitato = datiInvitoTeamU.get(2);
+
+                    try {
+                        dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                        boolean ok = tdao.inviaInvitoTeam(teamId, emailInvitato, utente.getMail());
+
+                        if (!ok) {
+                            guida.setForeground(new java.awt.Color(180, 26, 0));
+                            guida.setText("<html>Invito non valido:<br>già invitato / già in team / team pieno / ha già team.</html>");
+                            return;
+                        }
+
+                        guida.setForeground(Color.WHITE);
+                        guida.setText("Invito inviato ✅");
+
+                        // aggiorna output
+                        JTextArea ta = dashboardUtente.getTextAreaVisualizza();
+                        ta.append("Invito inviato: Team \"" + nomeTeam + "\" → Utente: \"" + emailInvitato + "\"\n");
+
+                        // torno allo step email (stesso team) per invitare un altro
+                        passoInvitoTeamU = 1;
+                        datiInvitoTeamU.remove(2);
+
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+                        dashboardUtente.getFieldScrittura().setText("");
+                        aggiornaGuidaDashboardUtente();
+                        return;
+
+                    } catch (Exception ex) {
+                        guida.setForeground(new java.awt.Color(180, 26, 0));
+                        guida.setText("Errore invio invito: " + ex.getMessage());
+                        return;
+                    }
+                }
+
 
                 // --------------------------------------------------------
 // 0) Conferma CARICAMENTO DOCUMENTO
@@ -1261,10 +1558,7 @@ public class Controller {
                 dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
                 java.util.List<model.TeamInfo> mieiTeam = tdao.findTeamsByUtente(utente.getMail());
 
-                if (mieiTeam.isEmpty()) {
-                    textArea.append("Non fai parte di alcun team.\n");
-                    return;
-                }
+
 
                 // 2) raggruppo per titolo hackathon
                 java.util.Map<String, java.util.List<String>> mieiTeamPerHackathon = new java.util.HashMap<>();
@@ -1277,46 +1571,62 @@ public class Controller {
 
                 dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
                 dao.ClassificaDAO cdao = new daoImpl.ClassificaDAOImpl();
+                dao.VotoDAO vdao = new daoImpl.VotoDAOImpl();
+
 
                 // 3) per ogni hackathon, stampo la classifica
-                for (String titoloHackathon : mieiTeamPerHackathon.keySet()) {
+                // 3) prendo gli hackathon a cui l'utente è iscritto
+                java.util.List<model.Hackathon> hackathonIscritti = hdao.findByUtenteIscritto(utente.getMail());
+
+                if (hackathonIscritti.isEmpty()) {
+                    textArea.append("Non sei iscritto ad alcun hackathon.\n");
+                    scrollPane.revalidate();
+                    scrollPane.repaint();
+                    return;
+                }
+
+// 4) per ogni hackathon iscritto, stampo la classifica completa (tutti i team)
+                for (model.Hackathon h : hackathonIscritti) {
+                    String titoloHackathon = h.getTitolo();
                     Long hackathonId = hdao.findIdByTitolo(titoloHackathon);
-                    if (hackathonId == null) {
+                    if (hackathonId == null) continue;
+
+                    textArea.append("Hackathon: " + titoloHackathon + "\n");
+
+                    int inseriti = vdao.countVotiInseriti(hackathonId);
+                    int attesi = vdao.countVotiAttesi(hackathonId);
+
+                    if (!vdao.votiCompleti(hackathonId)) {
+                        textArea.append("  Classifica non ancora disponibile.\n");
+                        textArea.append("  Voti inseriti: " + inseriti + " / " + attesi + "\n\n");
                         continue;
                     }
 
-                    java.util.List<model.Classifica> classifica =
-                            cdao.findClassificaByHackathon(hackathonId);
-
-                    textArea.append("Hackathon: " + titoloHackathon + "\n");
+                    java.util.List<model.Classifica> classifica = cdao.findClassificaByHackathon(hackathonId);
 
                     if (classifica.isEmpty()) {
                         textArea.append("  Nessun voto registrato.\n\n");
                         continue;
                     }
 
-                    java.util.List<String> mieiNomiTeam = mieiTeamPerHackathon.get(titoloHackathon);
+                    // nomi dei team dell'utente SOLO per mostrare "<-- il tuo team"
+                    java.util.List<String> mieiNomiTeam =
+                            mieiTeamPerHackathon.getOrDefault(titoloHackathon, java.util.Collections.emptyList());
 
-                    int posizione = 1;
                     for (model.Classifica riga : classifica) {
-                        String nomeTeam = riga.getTeam().getNome(); // usa il tuo getter
+                        String nomeTeam = riga.getTeam().getNome();
                         int punteggio = riga.getPunteggio();
 
                         boolean mio = mieiNomiTeam.contains(nomeTeam);
 
-                        textArea.append("  " + posizione + ") "
-                                + nomeTeam
-                                + " – punteggio: " + punteggio);
-
-                        if (mio) {
-                            textArea.append("  <-- il tuo team");
-                        }
+                        textArea.append("Team: \"" + nomeTeam + "\"");
+                        if (mio) textArea.append("  <-- il tuo team");
                         textArea.append("\n");
-                        posizione++;
-                    }
 
-                    textArea.append("\n");
+                        textArea.append("Voto totale: \"" + punteggio + "\"\n\n");
+                    }
                 }
+
 
                 scrollPane.revalidate();
                 scrollPane.repaint();
@@ -1373,9 +1683,8 @@ public class Controller {
         // ===== BOTTONE "VISUALIZZA INVITI" =====
         dashboardGiudice.getVisualizzaInvitiButton().addActionListener(e -> {
 
-            // reset wizard giudice
-            passoInvitoG = 0;
-            datiInvitoG.clear();
+            resetWizardGiudice();
+
 
             JPanel pannelloLogico = dashboardGiudice.getPannelloLogico();
             if (pannelloLogico != null) {
@@ -1469,27 +1778,238 @@ public class Controller {
                 scroll.repaint();
             }
         });
+        // ===== BOTTONE "I MIEI HACKATHON" (pubblica problema) =====
+        dashboardGiudice.getIMieiHackaton().addActionListener(e -> {
+            resetWizardGiudice();
+            passoProblemaG = 0;
 
-        dashboardGiudice.getAvantiButton().addActionListener(e2 -> {
+
+
+
+            JPanel pannelloLogico = dashboardGiudice.getPannelloLogico();
+            if (pannelloLogico != null) pannelloLogico.setVisible(true);
+
+            JScrollPane scroll = dashboardGiudice.getScrollPaneVisualizza();
+            if (scroll != null) scroll.setVisible(true);
+
+            JTextArea textArea = dashboardGiudice.getTextAreaVisualizza();
+            if (textArea != null) {
+                textArea.setText("");
+                textArea.append("--- Hackathon assegnati (Giudice) ---\n\n");
+
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                java.util.List<model.Hackathon> assegnati = hdao.findAssegnatiPerGiudice(giudice.getMail());
+                if (assegnati.isEmpty()) {
+                    textArea.append("Nessun hackathon assegnato.\n");
+                } else {
+                    for (model.Hackathon h : assegnati) {
+                        textArea.append("Titolo: " + h.getTitolo() + "\n");
+                        textArea.append("Sede: " + h.getSede() + "\n");
+                        textArea.append("Inizio: " + h.getInizio() + "\n");
+                        textArea.append("----------------------------------------\n");
+                    }
+                }
+            }
+
+            JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+            if (areaDiTesto != null) {
+                areaDiTesto.setVisible(true);
+                areaDiTesto.setText("<html><b>Pubblica problema</b><br><br><b>Hackathon:</b> —</html>");
+            }
 
             JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
             if (guida != null) {
                 guida.setForeground(Color.WHITE);
+                guida.setText("<html>Inserisci il titolo<br>dell'hackathon (assegnato a te).</html>");
             }
 
-            // se non è attivo il wizard giudice, non fare nulla
-            if (passoInvitoG < 0) {
+            JTextField field = dashboardGiudice.getFieldScrittura();
+            if (field != null) {
+                field.setVisible(true);
+                field.setText("");
+            }
+
+            JButton avanti = dashboardGiudice.getAvantiButton();
+            JButton indietro = dashboardGiudice.getIndietroButton();
+            JButton conferma = dashboardGiudice.getIscrivitiButton();
+
+            if (avanti != null) avanti.setVisible(true);
+            if (indietro != null) indietro.setVisible(false);
+            if (conferma != null) {
+                conferma.setVisible(false);
+                conferma.setText("Pubblica");
+            }
+        });
+
+
+// ===== BOTTONE "I MIEI TEAM" (commento / voto) =====
+        dashboardGiudice.getIMieiTeam().addActionListener(e -> {
+            resetWizardGiudice();
+            passoTeamG = 0;
+
+
+            JPanel pannelloLogico = dashboardGiudice.getPannelloLogico();
+            if (pannelloLogico != null) pannelloLogico.setVisible(true);
+
+            JScrollPane scroll = dashboardGiudice.getScrollPaneVisualizza();
+            if (scroll != null) scroll.setVisible(true);
+
+            JTextArea textArea = dashboardGiudice.getTextAreaVisualizza();
+            if (textArea != null) {
+                textArea.setText("");
+                textArea.append("--- Selezione Hackathon (Giudice) ---\n\n");
+
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                java.util.List<model.Hackathon> assegnati = hdao.findAssegnatiPerGiudice(giudice.getMail());
+
+                if (assegnati.isEmpty()) {
+                    textArea.append("Nessun hackathon assegnato.\n");
+                } else {
+                    textArea.append("Hackathon disponibili:\n");
+                    for (model.Hackathon h : assegnati) {
+                        textArea.append(" - " + h.getTitolo() + "\n");
+                    }
+                    textArea.append("\nInserisci il titolo nel campo e premi Avanti.\n");
+                }
+            }
+
+            JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+            if (areaDiTesto != null) {
+                areaDiTesto.setVisible(true);
+                areaDiTesto.setText("<html><b>Team</b><br><br><b>Hackathon:</b> —</html>");
+            }
+
+            aggiornaGuidaDashboardGiudice();
+
+            JTextField field = dashboardGiudice.getFieldScrittura();
+            if (field != null) {
+                field.setVisible(true);
+                field.setText("");
+            }
+
+            JButton avanti = dashboardGiudice.getAvantiButton();
+            JButton indietro = dashboardGiudice.getIndietroButton();
+            JButton conferma = dashboardGiudice.getIscrivitiButton();
+
+            if (avanti != null) avanti.setVisible(true);
+            if (indietro != null) indietro.setVisible(false);
+            if (conferma != null) conferma.setVisible(false);
+        });
+
+
+// ===== BOTTONE "CLASSIFICA" =====
+        // ===== Classifica (Giudice) =====
+        dashboardGiudice.getClassificaButton().addActionListener(e -> {
+
+            // disattivo wizard inviti (se era attivo)
+            resetWizardGiudice();
+            passoClassificaG = 0;
+
+
+
+            // vista solo lettura
+            dashboardGiudice.getPannelloLogico().setVisible(true);
+            dashboardGiudice.getScrollPaneVisualizza().setVisible(true);
+            dashboardGiudice.getTextAreaVisualizza().setVisible(true);
+            dashboardGiudice.getAreaDiTesto().setVisible(false);
+
+            dashboardGiudice.getFieldScrittura().setVisible(false);
+            dashboardGiudice.getAvantiButton().setVisible(false);
+            dashboardGiudice.getIndietroButton().setVisible(false);
+            dashboardGiudice.getIscrivitiButton().setVisible(false);
+
+            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+            guida.setForeground(Color.WHITE);
+            guida.setText("");
+
+            JTextArea textArea = dashboardGiudice.getTextAreaVisualizza();
+            JScrollPane scrollPane = dashboardGiudice.getScrollPaneVisualizza();
+            Color bg = dashboardGiudice.getPannelloLogico().getBackground();
+
+            textArea.setEditable(false);
+            textArea.setFocusable(false);
+            textArea.setBackground(bg);
+            textArea.setForeground(Color.WHITE);
+            textArea.setLineWrap(false);
+            textArea.setWrapStyleWord(false);
+            scrollPane.getViewport().setBackground(bg);
+            scrollPane.setBorder(null);
+
+            dashboardGiudice.getAreaDiTesto().setText("<html><b>Classifiche</b></html>");
+
+            textArea.setText("");
+            textArea.append("--- Classifiche hackathon assegnati ---\n\n");
+
+            dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+            dao.ClassificaDAO cdao = new daoImpl.ClassificaDAOImpl();
+            dao.VotoDAO vdao = new daoImpl.VotoDAOImpl();
+
+            java.util.List<model.Hackathon> assegnati = hdao.findAssegnatiPerGiudice(giudice.getMail());
+            if (assegnati.isEmpty()) {
+                textArea.append("Non hai hackathon assegnati.\n");
+                scrollPane.revalidate();
+                scrollPane.repaint();
                 return;
             }
 
-            // ===== STEP 0: inserimento titolo hackathon =====
-            if (passoInvitoG == 0) {
+            for (model.Hackathon h : assegnati) {
+                String titolo = h.getTitolo();
+                Long hackathonId = hdao.findIdByTitolo(titolo);
+                if (hackathonId == null) continue;
+
+                textArea.append("Hackathon: " + titolo + "\n");
+
+                int inseriti = vdao.countVotiInseriti(hackathonId);
+                int attesi = vdao.countVotiAttesi(hackathonId);
+
+                if (!vdao.votiCompleti(hackathonId)) {
+                    textArea.append("  Classifica non ancora disponibile.\n");
+                    textArea.append("  Voti inseriti: " + inseriti + " / " + attesi + "\n\n");
+                    continue;
+                }
+
+                java.util.List<model.Classifica> classifica = cdao.findClassificaByHackathon(hackathonId);
+                if (classifica.isEmpty()) {
+                    textArea.append("  Nessun voto registrato.\n\n");
+                    continue;
+                }
+
+                // formato come UTENTE: Team + Voto totale, ordinato DESC già nel DAO
+                for (model.Classifica riga : classifica) {
+                    String nomeTeam = riga.getTeam().getNome();
+                    int punteggio = riga.getPunteggio();
+
+                    textArea.append("Team: \"" + nomeTeam + "\"\n");
+                    textArea.append("Voto totale: \"" + punteggio + "\"\n\n");
+                }
+            }
+
+            scrollPane.revalidate();
+            scrollPane.repaint();
+        });
+
+
+
+        dashboardGiudice.getAvantiButton().addActionListener(e2 -> {
+
+            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+            if (guida != null) guida.setForeground(Color.WHITE);
+
+            // -------------------------
+            // 1) WIZARD INVITI (tuo)
+            // -------------------------
+            // -------------------------
+// 1) WIZARD INVITI (STEP 0)
+// -------------------------
+            if (passoInvitoG >= 0) {
+
+                // Avanti serve solo nello step 0 (in step 1 c'è "Partecipa")
+                if (passoInvitoG != 0) return;
+
                 JTextField field = dashboardGiudice.getFieldScrittura();
                 if (field == null) return;
 
-                String titoloInput = field.getText();
-                String titolo = (titoloInput == null) ? "" : titoloInput.trim();
-
+                String titolo = (field.getText() == null) ? "" : field.getText().trim();
                 if (titolo.isEmpty()) {
                     if (guida != null) {
                         guida.setForeground(new Color(180, 26, 0));
@@ -1498,15 +2018,12 @@ public class Controller {
                     return;
                 }
 
-                // controllo che il titolo sia tra gli inviti del giudice
-                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
-                java.util.List<model.Hackathon> inviti =
-                        hdao.findInvitiPerGiudice(giudice.getMail());
+                HackathonDAO hdao = new HackathonDAOImpl();
+                List<Hackathon> inviti = hdao.findInvitiPerGiudice(giudice.getMail());
 
-                model.Hackathon target = null;
-                for (model.Hackathon h : inviti) {
-                    if (h.getTitolo() != null &&
-                            h.getTitolo().trim().equalsIgnoreCase(titolo)) {
+                Hackathon target = null;
+                for (Hackathon h : inviti) {
+                    if (h.getTitolo() != null && h.getTitolo().trim().equalsIgnoreCase(titolo)) {
                         target = h;
                         break;
                     }
@@ -1520,30 +2037,27 @@ public class Controller {
                     return;
                 }
 
-                // salvo dati wizard
+                // salvo titolo scelto e passo allo step 1
                 datiInvitoG.clear();
                 datiInvitoG.add(target.getTitolo());
                 passoInvitoG = 1;
 
-                // aggiorno area di testo (riepilogo)
                 JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
                 if (areaDiTesto != null) {
-                    areaDiTesto.setText(
-                            "<html><b>Accettazione invito</b><br><br>" +
-                                    "<b>Hackathon:</b> " + target.getTitolo() + "</html>"
-                    );
+                    areaDiTesto.setText("<html><b>Accettazione invito</b><br><br><b>Hackathon:</b> " + target.getTitolo() + "</html>");
                 }
 
-                // guida step 1
                 if (guida != null) {
                     guida.setForeground(Color.WHITE);
                     guida.setText("<html>Clicca 'Partecipa'<br>per accettare l'invito.</html>");
                 }
 
-                // mostra il bottone "Partecipa"
                 JButton avanti = dashboardGiudice.getAvantiButton();
+                JButton indietro = dashboardGiudice.getIndietroButton();
                 JButton iscriviti = dashboardGiudice.getIscrivitiButton();
+
                 if (avanti != null) avanti.setVisible(false);
+                if (indietro != null) indietro.setVisible(true);
                 if (iscriviti != null) {
                     iscriviti.setVisible(true);
                     iscriviti.setText("Partecipa");
@@ -1552,109 +2066,720 @@ public class Controller {
                 field.setText("");
                 return;
             }
+
+
+            // -------------------------
+            // 2) WIZARD PUBBLICA PROBLEMA
+            // step 0: titolo hackathon -> avanti
+            // -------------------------
+            if (passoProblemaG == 0) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                if (field == null) return;
+
+                String titolo = (field.getText() == null) ? "" : field.getText().trim();
+                if (titolo.isEmpty()) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Il titolo non può<br>essere vuoto.</html>");
+                    }
+                    return;
+                }
+
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                java.util.List<model.Hackathon> assegnati = hdao.findAssegnatiPerGiudice(giudice.getMail());
+
+                model.Hackathon target = null;
+                for (model.Hackathon h : assegnati) {
+                    if (h.getTitolo() != null && h.getTitolo().trim().equalsIgnoreCase(titolo)) {
+                        target = h;
+                        break;
+                    }
+                }
+
+                if (target == null) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Hackathon non valido<br>(non assegnato a te).</html>");
+                    }
+                    return;
+                }
+
+                Long hackId = hdao.findIdByTitolo(target.getTitolo());
+                if (hackId == null) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Errore: ID hackathon<br>non trovato.</html>");
+                    }
+                    return;
+                }
+
+                datiProblemaG.clear();
+                datiProblemaG.add(target.getTitolo());
+                datiProblemaG.add(String.valueOf(hackId));
+                passoProblemaG = 1;
+
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText("<html><b>Pubblica problema</b><br><br><b>Hackathon:</b> " + target.getTitolo() + "</html>");
+                }
+
+                if (guida != null) {
+                    guida.setText("<html>Inserisci la descrizione<br>del problema e clicca 'Pubblica'.</html>");
+                }
+
+                JButton avanti = dashboardGiudice.getAvantiButton();
+                JButton indietro = dashboardGiudice.getIndietroButton();
+                JButton pubb = dashboardGiudice.getIscrivitiButton();
+
+                if (avanti != null) avanti.setVisible(false);
+                if (indietro != null) indietro.setVisible(true);
+                if (pubb != null) {
+                    pubb.setVisible(true);
+                    pubb.setText("Pubblica");
+                }
+
+                field.setText("");
+                return;
+            }
+
+            // -------------------------
+            // 3) WIZARD TEAM
+            // step 0: titolo hackathon
+            // step 1: id team
+            // step 2: azione (1 commento, 2 voto)
+            // -------------------------
+            if (passoTeamG == 0) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                if (field == null) return;
+
+                String titolo = (field.getText() == null) ? "" : field.getText().trim();
+                if (titolo.isEmpty()) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Il titolo non può<br>essere vuoto.</html>");
+                    }
+                    return;
+                }
+
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                java.util.List<model.Hackathon> assegnati = hdao.findAssegnatiPerGiudice(giudice.getMail());
+
+                model.Hackathon target = null;
+                for (model.Hackathon h : assegnati) {
+                    if (h.getTitolo() != null && h.getTitolo().trim().equalsIgnoreCase(titolo)) {
+                        target = h;
+                        break;
+                    }
+                }
+
+                if (target == null) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Hackathon non valido<br>(non assegnato a te).</html>");
+                    }
+                    return;
+                }
+
+                Long hackId = hdao.findIdByTitolo(target.getTitolo());
+                if (hackId == null) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Errore: ID hackathon<br>non trovato.</html>");
+                    }
+                    return;
+                }
+
+                datiTeamG.clear();
+                datiTeamG.add(target.getTitolo());
+                datiTeamG.add(String.valueOf(hackId));
+                passoTeamG = 1;
+
+                // stampa team
+                JTextArea ta = dashboardGiudice.getTextAreaVisualizza();
+                if (ta != null) {
+                    ta.setText("");
+                    ta.append("--- Team per hackathon: " + target.getTitolo() + " ---\n\n");
+
+                    dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                    java.util.List<model.TeamInfo> teams = tdao.findTeamsByHackathon(hackId);
+
+                    if (teams.isEmpty()) {
+                        ta.append("Nessun team registrato.\n");
+                    } else {
+                        dao.DocumentoDAO ddao = new daoImpl.DocumentoDAOImpl();
+                        dao.CommentoDAO cdao = new daoImpl.CommentoDAOImpl();
+
+                        for (model.TeamInfo t : teams) {
+                            ta.append("ID: " + t.getId() + " | Team: " + t.getNomeTeam() + "\n");
+                            ta.append("Creatore: " + t.getEmailCreatore() + " | Membri: " + t.getNumeroMembri() + "\n");
+
+                            String ultimo = ddao.trovaUltimoDocumento(t.getId(), hackId);
+                            if (ultimo == null) ultimo = "(nessun documento)";
+                            ta.append("Ultimo documento: " + ultimo + "\n");
+
+                            java.util.List<model.CommentoInfo> comm = cdao.findCommentiPerTeam(hackId, t.getId());
+                            if (comm.isEmpty()) {
+                                ta.append("Commenti: (nessuno)\n");
+                            } else {
+                                ta.append("Commenti:\n");
+                                for (model.CommentoInfo ci : comm) {
+                                    ta.append(" - " + ci.getGiudiceEmail() + ": " + ci.getContenuto() + "\n");
+                                }
+                            }
+                            ta.append("----------------------------------------\n");
+                        }
+                    }
+                }
+
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText("<html><b>Team</b><br><br><b>Hackathon:</b> " + target.getTitolo() +
+                            "<br><b>Step:</b> inserisci ID team</html>");
+                }
+
+                aggiornaGuidaDashboardGiudice();
+
+                JButton indietro = dashboardGiudice.getIndietroButton();
+                if (indietro != null) indietro.setVisible(true);
+
+                field.setText("");
+                return;
+            }
+
+            if (passoTeamG == 1) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                if (field == null) return;
+
+                String teamTxt = (field.getText() == null) ? "" : field.getText().trim();
+                long teamId;
+                try {
+                    teamId = Long.parseLong(teamTxt);
+                } catch (NumberFormatException ex) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Inserisci un ID team<br>numerico valido.</html>");
+                    }
+                    return;
+                }
+
+                long hackId = Long.parseLong(datiTeamG.get(1));
+
+                // verifica che il team appartenga a quell'hackathon
+                dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                java.util.List<model.TeamInfo> teams = tdao.findTeamsByHackathon(hackId);
+                boolean ok = false;
+                for (model.TeamInfo t : teams) {
+                    if (t.getId() == teamId) { ok = true; break; }
+                }
+                if (!ok) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Team non trovato<br>per questo hackathon.</html>");
+                    }
+                    return;
+                }
+
+                // salva teamId
+                while (datiTeamG.size() > 2) datiTeamG.remove(datiTeamG.size() - 1);
+                datiTeamG.add(String.valueOf(teamId));
+
+                passoTeamG = 2;
+
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText("<html><b>Team</b><br><br><b>Hackathon:</b> " + datiTeamG.get(0) +
+                            "<br><b>Team ID:</b> " + teamId +
+                            "<br><b>Step:</b> 1=commento, 2=voto</html>");
+                }
+
+                aggiornaGuidaDashboardGiudice();
+                field.setText("");
+                return;
+            }
+
+            if (passoTeamG == 2) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                if (field == null) return;
+
+                String scelta = (field.getText() == null) ? "" : field.getText().trim();
+                if (!scelta.equals("1") && !scelta.equals("2")) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Scrivi 1 (commento)<br>o 2 (voto).</html>");
+                    }
+                    return;
+                }
+
+                while (datiTeamG.size() > 3) datiTeamG.remove(datiTeamG.size() - 1);
+                datiTeamG.add(scelta); // azione
+
+                passoTeamG = 3;
+
+                JButton avanti = dashboardGiudice.getAvantiButton();
+                JButton conferma = dashboardGiudice.getIscrivitiButton();
+                if (avanti != null) avanti.setVisible(false);
+                if (conferma != null) {
+                    conferma.setVisible(true);
+                    conferma.setText(scelta.equals("1") ? "Invia" : "Vota");
+                }
+
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText("<html><b>Team</b><br><br><b>Hackathon:</b> " + datiTeamG.get(0) +
+                            "<br><b>Team ID:</b> " + datiTeamG.get(2) +
+                            "<br><b>Step:</b> inserisci " + (scelta.equals("1") ? "commento" : "voto (0-10)") +
+                            "</html>");
+                }
+
+                aggiornaGuidaDashboardGiudice();
+                field.setText("");
+                return;
+            }
+
+            // -------------------------
+            // 4) CLASSIFICA
+            // step 0: titolo hackathon -> mostra subito
+            // -------------------------
+            if (passoClassificaG == 0) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                if (field == null) return;
+
+                String titolo = (field.getText() == null) ? "" : field.getText().trim();
+                if (titolo.isEmpty()) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Il titolo non può<br>essere vuoto.</html>");
+                    }
+                    return;
+                }
+
+                dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+                java.util.List<model.Hackathon> assegnati = hdao.findAssegnatiPerGiudice(giudice.getMail());
+
+                model.Hackathon target = null;
+                for (model.Hackathon h : assegnati) {
+                    if (h.getTitolo() != null && h.getTitolo().trim().equalsIgnoreCase(titolo)) {
+                        target = h;
+                        break;
+                    }
+                }
+                if (target == null) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Hackathon non valido<br>(non assegnato a te).</html>");
+                    }
+                    return;
+                }
+
+                Long hackId = hdao.findIdByTitolo(target.getTitolo());
+                if (hackId == null) return;
+
+                JTextArea ta = dashboardGiudice.getTextAreaVisualizza();
+                if (ta != null) {
+                    ta.setText("");
+                    ta.append("--- Classifica: " + target.getTitolo() + " ---\n\n");
+                    dao.VotoDAO vdao = new daoImpl.VotoDAOImpl();
+                    int inseriti = vdao.countVotiInseriti(hackId);
+                    int attesi = vdao.countVotiAttesi(hackId);
+
+                    if (!vdao.votiCompleti(hackId)) {
+                        ta.append("Classifica non ancora disponibile.\n");
+                        ta.append("Voti inseriti: " + inseriti + " / " + attesi + "\n");
+                        ta.append("(La piattaforma pubblica la classifica solo dopo aver acquisito tutti i voti.)\n");
+                        field.setText("");
+                        return;
+                    }
+
+
+                    dao.ClassificaDAO cdao = new daoImpl.ClassificaDAOImpl();
+                    java.util.List<model.Classifica> classifica = cdao.findClassificaByHackathon(hackId);
+
+                    int pos = 1;
+                    for (model.Classifica r : classifica) {
+                        ta.append(pos + ") " + r.getTeam().getNome() + "  -  " + r.getPunteggio() + "\n");
+                        pos++;
+                    }
+                }
+
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+                if (areaDiTesto != null) {
+                    areaDiTesto.setText("<html><b>Classifica</b><br><br><b>Hackathon:</b> " + target.getTitolo() + "</html>");
+                }
+
+                field.setText("");
+                return;
+            }
         });
+
 
         dashboardGiudice.getIscrivitiButton().addActionListener(e3 -> {
 
-            // se il wizard invito non è nello step giusto, ignoro
-            if (passoInvitoG != 1 || datiInvitoG.isEmpty()) {
-                return;
-            }
+            // 1) INVITI (STEP 1) -> accetta invito
+            if (passoInvitoG == 1 && !datiInvitoG.isEmpty()) {
 
-            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
-            if (guida != null) {
-                guida.setForeground(Color.WHITE);
-            }
+                String titoloHackathon = datiInvitoG.get(0);
 
-            String titoloHackathon = datiInvitoG.get(0);
+                HackathonDAO hdao = new HackathonDAOImpl();
+                boolean ok = hdao.accettaInvitoGiudice(titoloHackathon, giudice.getMail());
 
-            dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
-            boolean ok = hdao.accettaInvitoGiudice(titoloHackathon, giudice.getMail());
+                JLabel guida2 = dashboardGiudice.getMessaggioErroreOrg();
+                if (guida2 != null) guida2.setForeground(Color.WHITE);
 
-            if (!ok) {
-                if (guida != null) {
-                    guida.setForeground(new Color(180, 26, 0));
-                    guida.setText("<html>Errore nell'accettazione<br>dell'invito.</html>");
+                if (!ok) {
+                    if (guida2 != null) {
+                        guida2.setForeground(new Color(180, 26, 0));
+                        guida2.setText("<html>Errore nell'accettazione<br>dell'invito.</html>");
+                    }
+                    return;
                 }
-                return;
-            }
 
-            // invito accettato
-            if (guida != null) {
-                guida.setForeground(Color.WHITE);
-                guida.setText("<html>Invito accettato!<br>Ora sei giudice di questo hackathon.</html>");
-            }
-
-            // reset wizard
-            passoInvitoG = -1;
-            datiInvitoG.clear();
-
-            // aggiorno la lista inviti rifacendo click sul bottone
-            dashboardGiudice.getVisualizzaInvitiButton().doClick();
-        });
-
-        dashboardGiudice.getIndietroButton().addActionListener(e -> {
-
-            // Se il wizard invito non è attivo, non faccio nulla
-            if (passoInvitoG < 0) {
-                return;
-            }
-
-            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
-            JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
-            JTextField field = dashboardGiudice.getFieldScrittura();
-            JButton avanti = dashboardGiudice.getAvantiButton();
-            JButton partecipa = dashboardGiudice.getIscrivitiButton();
-
-            // ===== TORNA DA STEP 1 A STEP 0 =====
-            if (passoInvitoG == 1) {
+                // successo: torno allo step 0 e ricarico la lista inviti
                 passoInvitoG = 0;
                 datiInvitoG.clear();
 
-                // ripristino testo guida e area procedurale iniziale
-                if (areaDiTesto != null) {
-                    areaDiTesto.setText(
-                            "<html><b>Accettazione invito</b><br><br>" +
-                                    "<b>Hackathon:</b> —</html>"
-                    );
-                }
-                if (guida != null) {
-                    guida.setForeground(Color.WHITE);
-                    guida.setText("<html>Inserisci il titolo<br>dell'hackathon che vuoi accettare.</html>");
+                JButton avanti = dashboardGiudice.getAvantiButton();
+                JButton indietro = dashboardGiudice.getIndietroButton();
+                JButton iscriviti = dashboardGiudice.getIscrivitiButton();
+                JTextField field = dashboardGiudice.getFieldScrittura();
+
+                if (avanti != null) avanti.setVisible(true);
+                if (indietro != null) indietro.setVisible(false);
+                if (iscriviti != null) iscriviti.setVisible(false);
+
+                if (field != null) field.setText("");
+
+                if (guida2 != null) {
+                    guida2.setForeground(Color.WHITE);
+                    guida2.setText("<html>Invito accettato ✅<br>Seleziona un altro hackathon.</html>");
                 }
 
-                if (field != null) {
-                    field.setVisible(true);
-                    field.setText("");
-                    field.requestFocusInWindow();
+                // refresh lista inviti (senza toccare i listener)
+                JTextArea ta = dashboardGiudice.getTextAreaVisualizza();
+                if (ta != null) {
+                    ta.setText("--- Inviti come giudice ---\n\n");
+                    List<Hackathon> inviti = hdao.findInvitiPerGiudice(giudice.getMail());
+                    if (inviti.isEmpty()) {
+                        ta.append("Non hai inviti al momento.\n");
+                    } else {
+                        for (Hackathon h : inviti) {
+                            ta.append("Titolo: " + h.getTitolo() + "\n");
+                            ta.append("Organizzatore: " + h.getOrganizzatore() + "\n");
+                            ta.append("Sede: " + h.getSede() + "\n");
+                            ta.append("Inizio: " + h.getInizio() + "\n");
+                            ta.append("---------------------------------\n");
+                        }
+                    }
                 }
-                if (avanti != null) avanti.setVisible(true);
-                if (partecipa != null) partecipa.setVisible(false);
 
                 return;
             }
 
-            // ===== DA STEP 0 → ESCE DAL WIZARD =====
-            if (passoInvitoG == 0) {
-                passoInvitoG = -1;
-                datiInvitoG.clear();
 
-                if (guida != null) {
-                    guida.setText("");
+            // 2) PUBBLICA PROBLEMA
+            if (passoProblemaG == 1 && datiProblemaG.size() >= 2) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+                if (guida != null) guida.setForeground(Color.WHITE);
+
+                String descr = (field.getText() == null) ? "" : field.getText().trim();
+                if (descr.isEmpty()) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Descrizione vuota.</html>");
+                    }
+                    return;
                 }
+
+                long hackId = Long.parseLong(datiProblemaG.get(1));
+
+                dao.ProblemaDAO pdao = new daoImpl.ProblemaDAOImpl();
+                pdao.pubblicaProblema(hackId, giudice.getMail(), descr);
+
+                JTextArea ta = dashboardGiudice.getTextAreaVisualizza();
+                if (ta != null) ta.append("\n✅ Problema pubblicato.\n");
+
+                // torna a step 0 (stesso wizard)
+                passoProblemaG = 0;
+                datiProblemaG.clear();
+
+                JButton avanti = dashboardGiudice.getAvantiButton();
+                JButton indietro = dashboardGiudice.getIndietroButton();
+                JButton pubb = dashboardGiudice.getIscrivitiButton();
+                if (avanti != null) avanti.setVisible(true);
+                if (indietro != null) indietro.setVisible(false);
+                if (pubb != null) pubb.setVisible(false);
+
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
+                if (areaDiTesto != null) areaDiTesto.setText("<html><b>Pubblica problema</b><br><br><b>Hackathon:</b> —</html>");
+
+                aggiornaGuidaDashboardGiudice();
+                field.setText("");
+                return;
+            }
+
+            // 3) TEAM (commento / voto)
+            if (passoTeamG == 3 && datiTeamG.size() >= 4) {
+                JTextField field = dashboardGiudice.getFieldScrittura();
+                JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+                if (guida != null) guida.setForeground(Color.WHITE);
+
+                long hackId = Long.parseLong(datiTeamG.get(1));
+                long teamId = Long.parseLong(datiTeamG.get(2));
+                String azione = datiTeamG.get(3);
+
+                String input = (field.getText() == null) ? "" : field.getText().trim();
+                if (input.isEmpty()) {
+                    if (guida != null) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Campo vuoto.</html>");
+                    }
+                    return;
+                }
+
+                if (azione.equals("1")) {
+                    dao.CommentoDAO cdao = new daoImpl.CommentoDAOImpl();
+                    cdao.salvaCommento(hackId, teamId, giudice.getMail(), input);
+                } else {
+                    int voto;
+                    try {
+                        voto = Integer.parseInt(input);
+                    } catch (NumberFormatException ex) {
+                        if (guida != null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Voto non valido.</html>");
+                        }
+                        return;
+                    }
+                    if (voto < 0 || voto > 10) {
+                        if (guida != null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("<html>Il voto deve essere 0-10.</html>");
+                        }
+                        return;
+                    }
+
+                    dao.VotoDAO vdao = new daoImpl.VotoDAOImpl();
+                    vdao.salvaVoto(hackId, teamId, giudice.getMail(), voto);
+                }
+
+                JTextArea ta = dashboardGiudice.getTextAreaVisualizza();
+                if (ta != null) ta.append("\n✅ Operazione completata.\n");
+
+                // torna a step 1 (stesso hackathon, scegli un altro team)
+                String titoloHack = datiTeamG.get(0);
+                String hackIdStr = datiTeamG.get(1);
+
+                datiTeamG.clear();
+                datiTeamG.add(titoloHack);
+                datiTeamG.add(hackIdStr);
+                passoTeamG = 1;
+
+                JButton avanti = dashboardGiudice.getAvantiButton();
+                JButton conferma = dashboardGiudice.getIscrivitiButton();
+                if (avanti != null) avanti.setVisible(true);
+                if (conferma != null) conferma.setVisible(false);
+
+                JLabel areaDiTesto = dashboardGiudice.getAreaDiTesto();
                 if (areaDiTesto != null) {
-                    areaDiTesto.setText("");
+                    areaDiTesto.setText("<html><b>Team</b><br><br><b>Hackathon:</b> " + titoloHack +
+                            "<br><b>Step:</b> inserisci ID team</html>");
                 }
-                if (field != null) {
-                    field.setText("");
-                    field.setVisible(false);
-                }
-                if (avanti != null) avanti.setVisible(false);
-                if (partecipa != null) partecipa.setVisible(false);
 
+                aggiornaGuidaDashboardGiudice();
+                field.setText("");
                 return;
             }
         });
+
+
+        dashboardGiudice.getIndietroButton().addActionListener(e -> {
+
+            // Utility riferimenti UI (con null-check)
+            JTextField field = dashboardGiudice.getFieldScrittura();
+            if (field != null) field.setText("");
+
+            JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
+            if (guida != null) {
+                guida.setForeground(Color.WHITE);
+                guida.setText("");
+            }
+
+            JButton avanti = dashboardGiudice.getAvantiButton();
+            JButton indietro = dashboardGiudice.getIndietroButton();
+            JButton conferma = dashboardGiudice.getIscrivitiButton();
+
+            // =====================================================
+            // 1) WIZARD INVITI (Visualizza Inviti)
+            // step 1 -> step 0
+            // step 0 -> chiude wizard
+            // =====================================================
+            if (passoInvitoG >= 0) {
+
+                if (passoInvitoG == 1) {
+                    // Torno allo step 0 (reinserisci titolo hackathon)
+                    passoInvitoG = 0;
+                    datiInvitoG.clear();
+
+                    if (avanti != null) avanti.setVisible(true);
+                    if (conferma != null) conferma.setVisible(false);
+                    if (indietro != null) indietro.setVisible(false);
+
+                    if (dashboardGiudice.getAreaDiTesto() != null) {
+                        dashboardGiudice.getAreaDiTesto()
+                                .setText("<html><b>Inviti</b><br><br><b>Hackathon:</b> —</html>");
+                    }
+
+                    aggiornaGuidaDashboardGiudice();
+                    return;
+                }
+
+                // passoInvitoG == 0  -> esco dal wizard inviti
+                passoInvitoG = -1;
+                datiInvitoG.clear();
+
+                if (avanti != null) avanti.setVisible(false);
+                if (conferma != null) conferma.setVisible(false);
+                if (indietro != null) indietro.setVisible(false);
+                if (field != null) field.setVisible(false);
+
+                if (dashboardGiudice.getAreaDiTesto() != null) dashboardGiudice.getAreaDiTesto().setText("");
+                if (guida != null) guida.setText("");
+
+                return;
+            }
+
+            // =====================================================
+            // 2) WIZARD PUBBLICA PROBLEMA (I miei Hackathon)
+            // step 1 -> step 0
+            // step 0 -> chiude wizard
+            // =====================================================
+            if (passoProblemaG >= 0) {
+
+                if (passoProblemaG == 1) {
+                    // Torno a step 0 (reinserisci titolo hackathon)
+                    passoProblemaG = 0;
+                    datiProblemaG.clear();
+
+                    if (avanti != null) avanti.setVisible(true);
+                    if (conferma != null) conferma.setVisible(false);
+                    if (indietro != null) indietro.setVisible(false);
+
+                    if (dashboardGiudice.getAreaDiTesto() != null) {
+                        dashboardGiudice.getAreaDiTesto()
+                                .setText("<html><b>Pubblica problema</b><br><br><b>Hackathon:</b> —</html>");
+                    }
+
+                    aggiornaGuidaDashboardGiudice();
+                    return;
+                }
+
+                // passoProblemaG == 0 -> esco dal wizard problema
+                passoProblemaG = -1;
+                datiProblemaG.clear();
+
+                if (avanti != null) avanti.setVisible(false);
+                if (conferma != null) conferma.setVisible(false);
+                if (indietro != null) indietro.setVisible(false);
+                if (field != null) field.setVisible(false);
+
+                if (dashboardGiudice.getAreaDiTesto() != null) dashboardGiudice.getAreaDiTesto().setText("");
+                if (guida != null) guida.setText("");
+
+                return;
+            }
+
+            // =====================================================
+            // 3) WIZARD TEAM (I miei Team)
+            // step 3 -> step 2 (scelta azione)
+            // step 2 -> step 1 (reinserisci team id)
+            // step 1 -> step 0 (reinserisci titolo hackathon)
+            // step 0 -> chiude wizard
+            // =====================================================
+            if (passoTeamG >= 0) {
+
+                // Step 3 -> Step 2
+                if (passoTeamG == 3) {
+                    passoTeamG = 2;
+
+                    // Quando torno a step 2: si usa Avanti, non Conferma
+                    if (avanti != null) avanti.setVisible(true);
+                    if (conferma != null) conferma.setVisible(false);
+                    if (indietro != null) indietro.setVisible(true);
+
+                    // (opzionale) tolgo l'azione salvata se presente
+                    if (datiTeamG.size() >= 4) {
+                        while (datiTeamG.size() > 3) datiTeamG.remove(datiTeamG.size() - 1);
+                    }
+
+                    aggiornaGuidaDashboardGiudice();
+                    return;
+                }
+
+                // Step 2 -> Step 1
+                if (passoTeamG == 2) {
+                    passoTeamG = 1;
+
+                    if (avanti != null) avanti.setVisible(true);
+                    if (conferma != null) conferma.setVisible(false);
+                    if (indietro != null) indietro.setVisible(true);
+
+                    // (opzionale) tolgo teamId/azione se avevi salvato troppo
+                    if (datiTeamG.size() > 2) {
+                        while (datiTeamG.size() > 2) datiTeamG.remove(datiTeamG.size() - 1);
+                    }
+
+                    aggiornaGuidaDashboardGiudice();
+                    return;
+                }
+
+                // Step 1 -> Step 0
+                if (passoTeamG == 1) {
+                    passoTeamG = 0;
+
+                    if (avanti != null) avanti.setVisible(true);
+                    if (conferma != null) conferma.setVisible(false);
+                    if (indietro != null) indietro.setVisible(false);
+
+                    // reset dati (riparti da titolo hackathon)
+                    datiTeamG.clear();
+
+                    aggiornaGuidaDashboardGiudice();
+                    return;
+                }
+
+                // Step 0 -> chiude wizard team
+                passoTeamG = -1;
+                datiTeamG.clear();
+
+                if (avanti != null) avanti.setVisible(false);
+                if (conferma != null) conferma.setVisible(false);
+                if (indietro != null) indietro.setVisible(false);
+                if (field != null) field.setVisible(false);
+
+                if (dashboardGiudice.getAreaDiTesto() != null) dashboardGiudice.getAreaDiTesto().setText("");
+                if (guida != null) guida.setText("");
+
+                return;
+            }
+
+            // =====================================================
+            // 4) WIZARD CLASSIFICA
+            // step 0 -> chiude wizard
+            // =====================================================
+            if (passoClassificaG >= 0) {
+                passoClassificaG = -1;
+                datiClassificaG.clear();
+
+                if (avanti != null) avanti.setVisible(false);
+                if (conferma != null) conferma.setVisible(false);
+                if (indietro != null) indietro.setVisible(false);
+                if (field != null) field.setVisible(false);
+
+                if (dashboardGiudice.getAreaDiTesto() != null) dashboardGiudice.getAreaDiTesto().setText("");
+                if (guida != null) guida.setText("");
+            }
+        });
+
 
 
     }
@@ -2264,6 +3389,19 @@ public class Controller {
         JLabel guida = dashboardUtente.getMessaggioErroreOrg();
         guida.setForeground(Color.WHITE);
 
+        // Wizard INVITO TEAM (Invia invito al mio team)
+        if (passoInvitoTeamU >= 0) {
+            if (passoInvitoTeamU == 0) {
+                guida.setText("<html>Inserisci il <b>nome del team</b><br>tra quelli elencati.</html>");
+            } else if (passoInvitoTeamU == 1) {
+                guida.setText("<html>Inserisci l'<b>email</b> dell'utente da invitare.</html>");
+            } else if (passoInvitoTeamU == 2) {
+                guida.setText("<html>Clicca <b>Invita</b> per confermare.</html>");
+            }
+            return;
+        }
+
+
         // Wizard ISCRIZIONE (Hackaton disponibili)
         if (passoIscrizioneU >= 0) {
             if (passoIscrizioneU == 0) {
@@ -2298,13 +3436,21 @@ public class Controller {
             }
             return;
         }
+        if (passoInvitoTeamU >= 0) {
+            if (passoInvitoTeamU == 0) {
+                guida.setText("<html>Inserisci il <b>nome del team</b><br>(tra quelli sotto).</html>");
+            } else if (passoInvitoTeamU == 1) {
+                guida.setText("<html>Inserisci l'<b>email</b><br>dell'utente da invitare.</html>");
+            }
+            return;
+        }
 
         // Nessun wizard attivo
         guida.setText("");
     }
 
     // Guida per la dashboard Giudice in base allo stato del wizard invito
-    private void aggiornaGuidaDashboardGiudice() {
+    void aggiornaGuidaDashboardGiudice() {
         if (dashboardGiudice == null) return;
 
         JLabel guida = dashboardGiudice.getMessaggioErroreOrg();
@@ -2312,7 +3458,7 @@ public class Controller {
 
         guida.setForeground(Color.WHITE);
 
-        // Wizard ACCETTAZIONE INVITO (Visualizza inviti)
+        // 1) INVITI
         if (passoInvitoG >= 0) {
             if (passoInvitoG == 0) {
                 guida.setText("<html>Inserisci il titolo<br>dell'hackathon che vuoi accettare.</html>");
@@ -2322,8 +3468,51 @@ public class Controller {
             return;
         }
 
-        // Nessun wizard attivo
+        // 2) PUBBLICA PROBLEMA
+        if (passoProblemaG >= 0) {
+            if (passoProblemaG == 0) {
+                guida.setText("<html>Inserisci il titolo<br>dell'hackathon (assegnato a te).</html>");
+            } else if (passoProblemaG == 1) {
+                guida.setText("<html>Inserisci la descrizione<br>del problema e clicca 'Pubblica'.</html>");
+            }
+            return;
+        }
+
+        // 3) TEAM (commento/voto)
+        if (passoTeamG >= 0) {
+            if (passoTeamG == 0) {
+                guida.setText("<html>Inserisci il titolo<br>dell'hackathon (assegnato a te).</html>");
+            } else if (passoTeamG == 1) {
+                guida.setText("<html>Inserisci l'ID del team<br>su cui vuoi agire.</html>");
+            } else if (passoTeamG == 2) {
+                guida.setText("<html>Scrivi 1 per commentare<br>o 2 per votare, poi 'Avanti'.</html>");
+            } else if (passoTeamG == 3) {
+                guida.setText("<html>Inserisci testo (commento)<br>oppure voto (0-10) e conferma.</html>");
+            }
+            return;
+        }
+
+        // 4) CLASSIFICA
+        if (passoClassificaG >= 0) {
+            guida.setText("<html>Inserisci il titolo<br>dell'hackathon per vedere la classifica.</html>");
+            return;
+        }
+
         guida.setText("");
+    }
+
+    private void resetWizardGiudice() {
+        passoInvitoG = -1;
+        datiInvitoG.clear();
+
+        passoProblemaG = -1;
+        datiProblemaG.clear();
+
+        passoTeamG = -1;
+        datiTeamG.clear();
+
+        passoClassificaG = -1;
+        datiClassificaG.clear();
     }
 
 

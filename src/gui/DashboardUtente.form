@@ -14,7 +14,7 @@
     </properties>
     <border type="none"/>
     <children>
-      <grid id="c2859" binding="pannelloBottoni" layout-manager="GridLayoutManager" row-count="7" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="c2859" binding="pannelloBottoni" layout-manager="GridLayoutManager" row-count="8" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="15" left="15" bottom="15" right="15"/>
         <constraints border-constraint="East"/>
         <properties>
@@ -27,7 +27,7 @@
         <children>
           <vspacer id="a8141">
             <constraints>
-              <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+              <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
             </constraints>
           </vspacer>
           <component id="924f1" class="javax.swing.JButton" binding="hackatonDisponibili">
@@ -91,7 +91,7 @@
           <grid id="86b81" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
-              <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
               <visible value="false"/>
@@ -129,6 +129,25 @@
               <iconTextGap value="6"/>
               <requestFocusEnabled value="true"/>
               <text value="Classifica"/>
+            </properties>
+          </component>
+          <component id="223ec" class="javax.swing.JButton" binding="inviaInvitoButton">
+            <constraints>
+              <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                <minimum-size width="175" height="35"/>
+                <preferred-size width="175" height="35"/>
+                <maximum-size width="175" height="35"/>
+              </grid>
+            </constraints>
+            <properties>
+              <background color="-13877680"/>
+              <focusable value="false"/>
+              <font name="Inter"/>
+              <foreground color="-1"/>
+              <horizontalTextPosition value="4"/>
+              <iconTextGap value="6"/>
+              <requestFocusEnabled value="true"/>
+              <text value="Invia Invito"/>
             </properties>
           </component>
         </children>

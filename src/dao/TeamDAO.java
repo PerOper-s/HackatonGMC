@@ -12,4 +12,11 @@ public interface TeamDAO {
 
     List<TeamInfo> findTeamsByUtente(String emailUtente);
     List<String> findMembriTeam(long teamId);
+    List<TeamInfo> findTeamsByHackathon(long hackathonId);
+    Long findTeamIdByNome(long hackathonId, String nomeTeam);
+    boolean inviaInvitoTeam(long teamId, String invitatoEmail, String invitanteEmail);
+    Long findMyTeamId(long hackathonId, String emailUtente);
+    List<String> findInvitiInviati(long teamId);
+
+
 }

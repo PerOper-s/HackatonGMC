@@ -41,4 +41,72 @@ public class ProblemaDAOImpl implements ProblemaDAO {
 
         return null; // nessun problema pubblicato
     }
+    @Override
+    public void pubblicaProblema(long hackathonId, String giudiceEmail, String descrizione) {
+        final String ddl = """
+        CREATE TABLE IF NOT EXISTS problema (
+          id SERIAL PRIMARY KEY,
+          hackathon_id INTEGER NOT NULL REFERENCES hackathon(id) ON DELETE CASCADE,
+          descrizione TEXT NOT NULL,
+          giudice_email VARCHAR NOT NULL,
+          data_pubblicazione TIMESTAMP NOT NULL DEFAULT NOW()
+        )
+        """;
+
+        try (Connection c = Database.getConnection(); Statement st = c.createStatement()) {
+            st.executeUpdate(ddl);
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore creazione tabella problema", e);
+        }
+
+        String sql = "INSERT INTO problema(hackathon_id, descrizione, giudice_email, data_pubblicazione) VALUES (?,?,?, NOW())";
+
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setLong(1, hackathonId);
+            ps.setString(2, descrizione);
+            ps.setString(3, giudiceEmail);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore pubblicazione problema", e);
+        }
+    }
+
+    @Override
+    public java.util.List<Problema> trovaTuttiPerHackathon(long hackathonId) {
+        String sql = """
+        SELECT descrizione, giudice_email, data_pubblicazione
+        FROM problema
+        WHERE hackathon_id = ?
+        ORDER BY data_pubblicazione ASC
+        """;
+
+        java.util.List<Problema> result = new java.util.ArrayList<>();
+
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setLong(1, hackathonId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String descrizione = rs.getString("descrizione");
+                    String emailGiudice = rs.getString("giudice_email");
+                    String dataPubblicazione = String.valueOf(rs.getTimestamp("data_pubblicazione"));
+
+                    Giudice g = new Giudice(emailGiudice);
+                    result.add(new Problema(descrizione, dataPubblicazione, g));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore nel recupero dei problemi", e);
+        }
+
+        return result;
+    }
+
+
 }

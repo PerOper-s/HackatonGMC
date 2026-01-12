@@ -14,8 +14,8 @@ import java.util.Locale;
 public class DashboardGiudice {
     private JPanel dashboardGiudice;
     private JPanel pannelloBottoni;
-    private JButton iMieiTeam;
-    private JButton iMieiHackaton;
+    private JButton valutaTeamButton;
+    private JButton hackatonAssegnati;
     private JLabel messaggioBenvenuto;
     private JButton classificaButtonù;
     private JButton visualizzaInvitiButton;
@@ -30,7 +30,6 @@ public class DashboardGiudice {
     private JButton iscrivitiButton;
 
 
-
     public DashboardGiudice(String emailGiudice) {
 
     }
@@ -38,7 +37,6 @@ public class DashboardGiudice {
     public JPanel getDashboardGiudice() {
         return dashboardGiudice;
     }
-
 
 
     public JButton getVisualizzaInvitiButton() {
@@ -52,6 +50,7 @@ public class DashboardGiudice {
     public JTextArea getTextAreaVisualizza() {
         return textAreaVisualizza;
     }
+
     public JLabel getMessaggioBenvenuto() {
         return messaggioBenvenuto;
     }
@@ -85,11 +84,11 @@ public class DashboardGiudice {
     }
 
     public JButton getIMieiTeam() {
-        return iMieiTeam;
+        return valutaTeamButton;
     }
 
     public JButton getIMieiHackaton() {
-        return iMieiHackaton;
+        return hackatonAssegnati;
     }
 
     public JButton getClassificaButton() {
@@ -129,13 +128,13 @@ public class DashboardGiudice {
         final Spacer spacer3 = new Spacer();
         dashboardGiudice.add(spacer3, BorderLayout.WEST);
         pannelloBottoni = new JPanel();
-        pannelloBottoni.setLayout(new GridLayoutManager(7, 1, new Insets(15, 15, 15, 15), -1, -1));
+        pannelloBottoni.setLayout(new GridLayoutManager(6, 1, new Insets(15, 15, 15, 15), -1, -1));
         pannelloBottoni.setBackground(new Color(-15918294));
         pannelloBottoni.setEnabled(true);
         dashboardGiudice.add(pannelloBottoni, BorderLayout.EAST);
         pannelloBottoni.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-16777216)), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         final Spacer spacer4 = new Spacer();
-        pannelloBottoni.add(spacer4, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        pannelloBottoni.add(spacer4, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         visualizzaInvitiButton = new JButton();
         visualizzaInvitiButton.setBackground(new Color(-13877680));
         visualizzaInvitiButton.setFocusable(false);
@@ -148,32 +147,28 @@ public class DashboardGiudice {
         visualizzaInvitiButton.setRequestFocusEnabled(true);
         visualizzaInvitiButton.setText("Visualizza Inviti");
         pannelloBottoni.add(visualizzaInvitiButton, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
-        iMieiTeam = new JButton();
-        iMieiTeam.setBackground(new Color(-13877680));
-        iMieiTeam.setFocusable(false);
-        Font iMieiTeamFont = this.$$$getFont$$$("Inter", -1, -1, iMieiTeam.getFont());
-        if (iMieiTeamFont != null) iMieiTeam.setFont(iMieiTeamFont);
-        iMieiTeam.setForeground(new Color(-1));
-        iMieiTeam.setHorizontalTextPosition(4);
-        iMieiTeam.setIconTextGap(6);
-        iMieiTeam.setRequestFocusEnabled(true);
-        iMieiTeam.setText("I miei Team");
-        pannelloBottoni.add(iMieiTeam, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
-        iMieiHackaton = new JButton();
-        iMieiHackaton.setBackground(new Color(-13877680));
-        iMieiHackaton.setFocusable(false);
-        Font iMieiHackatonFont = this.$$$getFont$$$("Inter", -1, -1, iMieiHackaton.getFont());
-        if (iMieiHackatonFont != null) iMieiHackaton.setFont(iMieiHackatonFont);
-        iMieiHackaton.setForeground(new Color(-1));
-        iMieiHackaton.setHorizontalTextPosition(4);
-        iMieiHackaton.setIconTextGap(6);
-        iMieiHackaton.setRequestFocusEnabled(true);
-        iMieiHackaton.setText("I miei Hackaton");
-        pannelloBottoni.add(iMieiHackaton, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
-        final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-        panel1.setVisible(false);
-        pannelloBottoni.add(panel1, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        valutaTeamButton = new JButton();
+        valutaTeamButton.setBackground(new Color(-13877680));
+        valutaTeamButton.setFocusable(false);
+        Font valutaTeamButtonFont = this.$$$getFont$$$("Inter", -1, -1, valutaTeamButton.getFont());
+        if (valutaTeamButtonFont != null) valutaTeamButton.setFont(valutaTeamButtonFont);
+        valutaTeamButton.setForeground(new Color(-1));
+        valutaTeamButton.setHorizontalTextPosition(4);
+        valutaTeamButton.setIconTextGap(6);
+        valutaTeamButton.setRequestFocusEnabled(true);
+        valutaTeamButton.setText("Valuta un Team");
+        pannelloBottoni.add(valutaTeamButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
+        hackatonAssegnati = new JButton();
+        hackatonAssegnati.setBackground(new Color(-13877680));
+        hackatonAssegnati.setFocusable(false);
+        Font hackatonAssegnatiFont = this.$$$getFont$$$("Inter", -1, -1, hackatonAssegnati.getFont());
+        if (hackatonAssegnatiFont != null) hackatonAssegnati.setFont(hackatonAssegnatiFont);
+        hackatonAssegnati.setForeground(new Color(-1));
+        hackatonAssegnati.setHorizontalTextPosition(4);
+        hackatonAssegnati.setIconTextGap(6);
+        hackatonAssegnati.setRequestFocusEnabled(true);
+        hackatonAssegnati.setText("Hackaton assegnati");
+        pannelloBottoni.add(hackatonAssegnati, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(175, 35), new Dimension(175, 35), new Dimension(175, 35), 0, false));
         messaggioBenvenuto = new JLabel();
         messaggioBenvenuto.setBackground(new Color(-15918294));
         Font messaggioBenvenutoFont = this.$$$getFont$$$("Inter", -1, 11, messaggioBenvenuto.getFont());
