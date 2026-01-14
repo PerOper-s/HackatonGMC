@@ -56,6 +56,10 @@ public class Controller {
     private ArrayList<String> datiClassificaG = new ArrayList<>();
     private int passoInvitoTeamU = -1;
     private ArrayList<String> datiInvitoTeamU = new ArrayList<>();
+    private int passoInvitiRicevutiU = -1;
+    private ArrayList<String> datiInvitiRicevutiU = new ArrayList<>();
+
+
 
 
 
@@ -782,8 +786,62 @@ public class Controller {
 
 
                 // --------------------------------------------------------
-                // 1) WIZARD ISCRIZIONE (Hackaton Disponibili)
-                // --------------------------------------------------------
+                if (passoInvitiRicevutiU >= 0) {
+
+                    if (passoInvitiRicevutiU == 0) {
+                        String input = dashboardUtente.getFieldScrittura().getText();
+                        input = (input == null) ? "" : input.trim();
+
+                        long invitoId;
+                        try {
+                            invitoId = Long.parseLong(input);
+                        } catch (NumberFormatException ex) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("ID non valido (solo numeri).");
+                            return;
+                        }
+
+                        // verifica che esista tra gli inviti ricevuti
+                        dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                        java.util.List<model.InvitoTeamInfo> inviti = tdao.findInvitiRicevuti(utente.getMail());
+
+                        model.InvitoTeamInfo scelto = null;
+                        for (model.InvitoTeamInfo inv : inviti) {
+                            if (inv.getIdInvito() == invitoId) { scelto = inv; break; }
+                        }
+
+                        if (scelto == null) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Invito non trovato o non più disponibile.");
+                            return;
+                        }
+
+                        datiInvitiRicevutiU.clear();
+                        datiInvitiRicevutiU.add(String.valueOf(invitoId));
+
+                        passoInvitiRicevutiU = 1;
+
+                        dashboardUtente.getAreaDiTesto().setText(
+                                "<html><b>Invito selezionato</b><br>" +
+                                        "ID: <b>" + invitoId + "</b><br>" +
+                                        "Hackathon: " + scelto.getTitoloHackathon() + "<br>" +
+                                        "Team: \"" + scelto.getNomeTeam() + "\"</html>"
+                        );
+
+                        dashboardUtente.getAvantiButton().setVisible(false);
+                        dashboardUtente.getIscrivitiButton().setVisible(true);
+                        dashboardUtente.getIscrivitiButton().setText("Accetta");
+
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+
+                    return;
+                }
+
+
+
+
                 if (passoIscrizioneU >= 0) {
 
                     if (passoIscrizioneU == 0) {
@@ -1144,9 +1202,27 @@ public class Controller {
                 JLabel guida = dashboardUtente.getMessaggioErroreOrg();
                 guida.setForeground(Color.WHITE);
                 aggiornaGuidaDashboardUtente();
+                if (passoInvitiRicevutiU >= 0) {
 
-                // --------------------------------------------------------
-// WIZARD: INVIA INVITO TEAM
+                    // se ero nella conferma, torno a inserire ID
+                    if (passoInvitiRicevutiU == 1) {
+                        passoInvitiRicevutiU = 0;
+                        datiInvitiRicevutiU.clear();
+
+                        dashboardUtente.getIscrivitiButton().setVisible(false);
+                        dashboardUtente.getAvantiButton().setVisible(true);
+                        dashboardUtente.getAreaDiTesto().setText("<html><b>Inviti Team ricevuti</b></html>");
+                        dashboardUtente.getFieldScrittura().setText("");
+
+                        aggiornaGuidaDashboardUtente();
+                        return;
+                    }
+
+                    // se ero già al passo 0, ricarico la lista
+                    dashboardUtente.getVisualizzaInviti().doClick();
+                    return;
+                }
+
 // --------------------------------------------------------
                 // 0) wizard INVITO TEAM
                 if (passoInvitoTeamU >= 0) {
@@ -1302,6 +1378,37 @@ public class Controller {
 
                 JLabel guida = dashboardUtente.getMessaggioErroreOrg();
                 guida.setForeground(java.awt.Color.WHITE);
+
+
+                // --------------------------------------------------------
+                if (passoInvitiRicevutiU == 1 && !datiInvitiRicevutiU.isEmpty()) {
+
+                    long invitoId = Long.parseLong(datiInvitiRicevutiU.get(0));
+
+                    dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                    boolean ok = tdao.accettaInvitoTeam(invitoId, utente.getMail());
+
+                    if (!ok) {
+                        guida.setForeground(new Color(180, 26, 0));
+                        guida.setText("<html>Non posso accettare:<br>team pieno / hai già team in quell'hackathon / invito non valido.</html>");
+                        return;
+                    }
+
+                    guida.setForeground(Color.WHITE);
+                    guida.setText("Invito accettato ✅");
+
+                    // reset e ricarica lista
+                    passoInvitiRicevutiU = 0;
+                    datiInvitiRicevutiU.clear();
+
+                    dashboardUtente.getIscrivitiButton().setVisible(false);
+                    dashboardUtente.getAvantiButton().setVisible(true);
+                    dashboardUtente.getFieldScrittura().setText("");
+
+                    dashboardUtente.getVisualizzaInviti().doClick();
+                    return;
+                }
+
 
 
                 // --------------------------------------------------------
@@ -1632,6 +1739,74 @@ public class Controller {
                 scrollPane.repaint();
             });
 
+
+            dashboardUtente.getVisualizzaInviti().addActionListener(e -> {
+
+                // reset altri wizard
+                passoIscrizioneU = -1; datiIscrizioneU.clear();
+                passoTeamU = -1; datiTeamU.clear();
+                passoDocumentoU = -1; datiDocumentoU.clear();
+                passoInvitoTeamU = -1; datiInvitoTeamU.clear();
+
+                // wizard inviti ricevuti
+                passoInvitiRicevutiU = 0;
+                datiInvitiRicevutiU.clear();
+
+                dashboardUtente.getPannelloLogico().setVisible(true);
+                dashboardUtente.getScrollPaneVisualizza().setVisible(true);
+                dashboardUtente.getTextAreaVisualizza().setVisible(true);
+                dashboardUtente.getAreaDiTesto().setVisible(true);
+
+                dashboardUtente.getFieldScrittura().setVisible(true);
+                dashboardUtente.getAvantiButton().setVisible(true);
+                dashboardUtente.getIndietroButton().setVisible(true);
+
+                dashboardUtente.getIscrivitiButton().setVisible(false);
+                dashboardUtente.getIscrivitiButton().setText("Accetta");
+
+                dashboardUtente.getAreaDiTesto().setText("<html><b>Inviti Team ricevuti</b></html>");
+
+                JTextArea ta = dashboardUtente.getTextAreaVisualizza();
+                JScrollPane sp = dashboardUtente.getScrollPaneVisualizza();
+                Color bg = dashboardUtente.getPannelloLogico().getBackground();
+
+                ta.setEditable(false);
+                ta.setFocusable(false);
+                ta.setBackground(bg);
+                ta.setForeground(Color.WHITE);
+                ta.setLineWrap(false);
+                ta.setWrapStyleWord(false);
+                sp.getViewport().setBackground(bg);
+                sp.setBorder(null);
+
+                ta.setText("");
+                ta.append("--- Inviti Team ricevuti ---\n\n");
+
+                dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
+                java.util.List<model.InvitoTeamInfo> inviti = tdao.findInvitiRicevuti(utente.getMail());
+
+                if (inviti.isEmpty()) {
+                    ta.append("Non hai inviti al momento.\n");
+                    passoInvitiRicevutiU = -1;
+                    dashboardUtente.getFieldScrittura().setVisible(false);
+                    dashboardUtente.getAvantiButton().setVisible(false);
+                    dashboardUtente.getIndietroButton().setVisible(false);
+                    dashboardUtente.getMessaggioErroreOrg().setText("");
+                    return;
+                }
+
+                for (model.InvitoTeamInfo inv : inviti) {
+                    ta.append("ID: " + inv.getIdInvito() + "\n");
+                    ta.append("Hackathon: " + inv.getTitoloHackathon() + "\n");
+                    ta.append("Team: \"" + inv.getNomeTeam() + "\"\n");
+                    ta.append("Invitante: " + inv.getInvitanteEmail() + "\n");
+                    ta.append("-------------------------------------\n");
+                }
+
+                aggiornaGuidaDashboardUtente();
+                dashboardUtente.getFieldScrittura().setText("");
+                dashboardUtente.getFieldScrittura().requestFocusInWindow();
+            });
 
 
 
@@ -3389,7 +3564,19 @@ public class Controller {
         JLabel guida = dashboardUtente.getMessaggioErroreOrg();
         guida.setForeground(Color.WHITE);
 
-        // Wizard INVITO TEAM (Invia invito al mio team)
+
+
+        if (passoInvitiRicevutiU >= 0) {
+            guida.setForeground(Color.WHITE);
+            if (passoInvitiRicevutiU == 0) {
+                guida.setText("<html>Inserisci l'<b>ID</b> dell'invito da accettare.</html>");
+            } else if (passoInvitiRicevutiU == 1) {
+                guida.setText("<html>Clicca <b>Accetta</b> per confermare.</html>");
+            }
+            return;
+        }
+
+
         if (passoInvitoTeamU >= 0) {
             if (passoInvitoTeamU == 0) {
                 guida.setText("<html>Inserisci il <b>nome del team</b><br>tra quelli elencati.</html>");

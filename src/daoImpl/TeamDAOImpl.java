@@ -5,6 +5,7 @@ import database.Database;
 import model.TeamInfo;
 import java.util.ArrayList;
 import java.util.List;
+import model.InvitoTeamInfo;
 
 
 import java.sql.*;
@@ -397,6 +398,142 @@ public class TeamDAOImpl implements TeamDAO {
         }
 
         return out;
+    }
+
+    @Override
+    public List<model.InvitoTeamInfo> findInvitiRicevuti(String invitatoEmail) {
+        String sql = """
+        SELECT ti.id,
+               ti.team_id,
+               t.nome AS team_nome,
+               h.titolo AS hackathon_titolo,
+               ti.invitante_email,
+               ti.created_at
+        FROM team_invito ti
+        JOIN team t ON t.id = ti.team_id
+        JOIN hackathon h ON h.id = t.hackathon_id
+        WHERE ti.invitato_email = ?
+          AND ti.stato = 'PENDING'
+        ORDER BY ti.created_at DESC
+        """;
+
+        List<model.InvitoTeamInfo> out = new ArrayList<>();
+
+        try (Connection c = Database.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setString(1, invitatoEmail);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(new model.InvitoTeamInfo(
+                            rs.getLong("id"),
+                            rs.getLong("team_id"),
+                            rs.getString("team_nome"),
+                            rs.getString("hackathon_titolo"),
+                            rs.getString("invitante_email"),
+                            rs.getTimestamp("created_at")
+                    ));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore findInvitiRicevuti", e);
+        }
+
+        return out;
+    }
+
+    @Override
+    public boolean accettaInvitoTeam(long invitoId, String invitatoEmail) {
+
+        String select = """
+        SELECT ti.team_id, t.hackathon_id
+        FROM team_invito ti
+        JOIN team t ON t.id = ti.team_id
+        WHERE ti.id = ?
+          AND ti.invitato_email = ?
+          AND ti.stato = 'PENDING'
+        FOR UPDATE
+        """;
+
+        String insertMembro = """
+        INSERT INTO team_membro(team_id, utente_email)
+        VALUES (?, ?)
+        ON CONFLICT DO NOTHING
+        """;
+
+        String updateAccetta = "UPDATE team_invito SET stato = 'ACCEPTED' WHERE id = ?";
+
+        // annulla gli altri inviti PENDING dello stesso hackathon (così 1 team per hackathon)
+        String cancelAltri = """
+        UPDATE team_invito
+        SET stato = 'CANCELLED'
+        WHERE invitato_email = ?
+          AND stato = 'PENDING'
+          AND team_id IN (SELECT id FROM team WHERE hackathon_id = ?)
+        """;
+
+        try (Connection c = Database.getConnection()) {
+            c.setAutoCommit(false);
+
+            long teamId;
+            long hackathonId;
+
+            // 1) carico invito e blocco riga
+            try (PreparedStatement ps = c.prepareStatement(select)) {
+                ps.setLong(1, invitoId);
+                ps.setString(2, invitatoEmail);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        c.rollback();
+                        return false;
+                    }
+                    teamId = rs.getLong("team_id");
+                    hackathonId = rs.getLong("hackathon_id");
+                }
+            }
+
+            // 2) non deve già avere un team in QUEL hackathon
+            if (utenteHaTeam(hackathonId, invitatoEmail)) {
+                c.rollback();
+                return false;
+            }
+
+            // 3) team non deve essere pieno
+            int membri = countMembri(teamId);
+            int maxSize = getMaxTeamSize(hackathonId);
+            if (maxSize > 0 && membri >= maxSize) {
+                c.rollback();
+                return false;
+            }
+
+            // 4) inserisco membro
+            try (PreparedStatement ps = c.prepareStatement(insertMembro)) {
+                ps.setLong(1, teamId);
+                ps.setString(2, invitatoEmail);
+                ps.executeUpdate();
+            }
+
+            // 5) accetto invito scelto
+            try (PreparedStatement ps = c.prepareStatement(updateAccetta)) {
+                ps.setLong(1, invitoId);
+                ps.executeUpdate();
+            }
+
+            // 6) cancello gli altri inviti nello stesso hackathon
+            try (PreparedStatement ps = c.prepareStatement(cancelAltri)) {
+                ps.setString(1, invitatoEmail);
+                ps.setLong(2, hackathonId);
+                ps.executeUpdate();
+            }
+
+            c.commit();
+            return true;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore accettaInvitoTeam", e);
+        }
     }
 
 
