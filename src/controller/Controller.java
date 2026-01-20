@@ -4,13 +4,11 @@ import gui.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.text.ParseException;
 import java.util.Date;
 import dao.UtenteDAO;
 import daoImpl.UtenteDAOImpl;
@@ -23,6 +21,7 @@ import model.Hackathon;
 import model.*;
 public class Controller {
 
+    // JFrame e pannelli
 
     private static JFrame frame;
     private static JFrame frame2;
@@ -39,7 +38,6 @@ public class Controller {
     private ArrayList<Hackathon> listaHackathon = new ArrayList<>();
     private int passoInvitoGiudice;
     private ArrayList<String> datiInvitoGiudice;
-    private Hackathon hackathonSelezionato;
     private int passoIscrizioneU = -1;
     private ArrayList<String> datiIscrizioneU = new ArrayList<>();
     private int passoTeamU = -1;
@@ -64,7 +62,7 @@ public class Controller {
 
 
 
-
+ // Costruttore
 
 
     public Controller () {
@@ -91,6 +89,9 @@ public class Controller {
 
     }
 
+
+    // Aggiunta dei listener ai componenti della GUI di login
+
     public void aggiungiListeners() {
        JTextField campoEmail = loginFrame.getEmailTextField();
        JPanel loginPanel = loginFrame.getPanel1();
@@ -116,6 +117,8 @@ public class Controller {
                 }
             }
        });
+
+       // meccanismo di login
 
         loginButton.addActionListener(e -> {
             String email = campoEmail.getText().trim();
@@ -183,6 +186,9 @@ public class Controller {
         });
 
         }
+
+        // Meccanismo della dashboard utente
+
         private void gestisciDashboardUtente(Utente utente){
             JLabel messaggioBenvenuto = dashboardUtente.getMessaggioBenvenuto();
             frame2 = new JFrame("HackatonDashboard - Utente" );
@@ -197,10 +203,9 @@ public class Controller {
 
 
 
-            // Hackaton Disponibili (stessa logica del "Visualizza Hackathon" dell'organizzatore)
-            // ===== Hackaton Disponibili (versione pulita, senza riassegnazioni dopo la stampa) =====
+            // visualizzazione hackaton disponibili + iscrizione
             dashboardUtente.getHackatonDisponibili().addActionListener(e -> {
-                // Mostra pannello elenco + mini-wizard (solo setup essenziale, nessuna setText su textArea oltre all'intestazione)
+                // Mostra pannello elenco
                 dashboardUtente.getPannelloLogico().setVisible(true);
                 dashboardUtente.getScrollPaneVisualizza().setVisible(true);
 
@@ -221,7 +226,7 @@ public class Controller {
                 dashboardUtente.getFieldScrittura().setText("");
                 dashboardUtente.getFieldScrittura().requestFocusInWindow();
 
-                // Configura textArea una volta
+                // Configura textArea
                 JTextArea textArea = dashboardUtente.getTextAreaVisualizza();
                 JScrollPane scrollPane = dashboardUtente.getScrollPaneVisualizza();
                 Color bg = dashboardUtente.getPannelloLogico().getBackground();
@@ -234,11 +239,11 @@ public class Controller {
                 scrollPane.getViewport().setBackground(bg);
                 scrollPane.setBorder(null);
 
-                // *** QUI: unica inizializzazione della textArea ***
-                textArea.setText(""); // pulisci
+
+                textArea.setText(""); // pulisco
                 textArea.append("--- Hackathon Disponibili (iscrizioni aperte oggi) ---\n\n");
 
-                // Carica e filtra con LocalDate helpers (estremi inclusi)
+                // Carica e filtra con LocalDate
                 HackathonDAO dao = new HackathonDAOImpl();
                 java.util.List<model.Hackathon> tutti = dao.findAll();
 
@@ -273,7 +278,7 @@ public class Controller {
                 }
 
                 if (!trovato) {
-                    // NOTA: qui NON azzero la textArea con setText(...). Aggiungo solo il messaggio.
+
                     textArea.append("Al momento non ci sono hackathon con iscrizioni aperte.\n");
                 }
 
@@ -289,11 +294,11 @@ public class Controller {
                 public void focusGained(FocusEvent e) {
                     JLabel labelInput = dashboardUtente.getMessaggioErroreOrg();
 
-                    // Se era in errore (rosso), lo resetto alla guida normale per lo step corrente
+                    // Se era in errore , lo resetto alla guida normale per lo step corrente
                     if (labelInput.getForeground().equals(new Color(180, 26, 0))) {
                         aggiornaGuidaDashboardUtente();
                     } else {
-                        // altrimenti lascio il testo com'è, ma mi assicuro che il colore sia bianco
+                        // altrimenti lascio il testo com'è,  colore bianco
                         labelInput.setForeground(Color.WHITE);
                     }
                 }
@@ -717,6 +722,18 @@ public class Controller {
                             return;
                         }
 
+                        // ✅ Team definitivi: dopo fine iscrizioni non puoi inviare inviti
+                        String titoloHack = selezionato.getTitoloHackathon();
+                        LocalDate fineIscr = fineIscrizioniByTitolo(titoloHack);
+                        if (fineIscr != null && today().isAfter(fineIscr)) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Iscrizioni chiuse: non puoi inviare inviti per questo hackathon.");
+                            return;
+                        }
+
+
+
+
                         datiInvitoTeamU.clear();
                         datiInvitoTeamU.add(String.valueOf(selezionato.getId())); // 0 teamId
                         datiInvitoTeamU.add(selezionato.getNomeTeam());          // 1 nomeTeam
@@ -751,6 +768,28 @@ public class Controller {
                             guida.setText("Non puoi invitare te stesso.");
                             return;
                         }
+                        // ✅ Team definitivi: ricavo titolo hackathon dal tuo team e controllo fine iscrizioni
+                        long teamId = Long.parseLong(datiInvitoTeamU.get(0)); // 0 = teamId
+                        dao.TeamDAO tdaoTmp = new daoImpl.TeamDAOImpl();
+                        java.util.List<model.TeamInfo> mieiTeam = tdaoTmp.findTeamsByUtente(utente.getMail());
+
+                        model.TeamInfo infoTeam = null;
+                        for (model.TeamInfo ti : mieiTeam) {
+                            if (ti.getId() == teamId) {
+                                infoTeam = ti;
+                                break;
+                            }
+                        }
+
+                        if (infoTeam != null) {
+                            LocalDate fineIscr = fineIscrizioniByTitolo(infoTeam.getTitoloHackathon());
+                            if (fineIscr != null && today().isAfter(fineIscr)) {
+                                guida.setForeground(new Color(180, 26, 0));
+                                guida.setText("Iscrizioni chiuse: inviti bloccati per questo hackathon.");
+                                return;
+                            }
+                        }
+
 
                         // check: deve essere un UTENTE (no giudice/organizzatore)
                         dao.UtenteDAO udao = new daoImpl.UtenteDAOImpl();
@@ -869,6 +908,15 @@ public class Controller {
                             guida.setText("Hackathon non trovata.");
                             return;
                         }
+
+                        // ✅ Team definitivi: dopo fine iscrizioni non puoi creare team
+                        LocalDate fineIscr = parseLocalDateFlex(target.getFineIscrizioni());
+                        if (fineIscr != null && today().isAfter(fineIscr)) {
+                            guida.setForeground(new Color(180, 26, 0));
+                            guida.setText("Iscrizioni chiuse: non puoi creare team per questo hackathon.");
+                            return;
+                        }
+
 
                         // verifica finestra iscrizioni con LocalDate
                         java.time.LocalDate oggi = today();
@@ -1420,6 +1468,25 @@ public class Controller {
                     String nomeTeam = datiInvitoTeamU.get(1);
                     String emailInvitato = datiInvitoTeamU.get(2);
 
+                    // ✅ Team definitivi: controllo chiusura iscrizioni anche al click finale
+                    dao.TeamDAO tdaoTmp = new daoImpl.TeamDAOImpl();
+                    java.util.List<model.TeamInfo> mieiTeam = tdaoTmp.findTeamsByUtente(utente.getMail());
+
+                    model.TeamInfo infoTeam = null;
+                    for (model.TeamInfo ti : mieiTeam) {
+                        if (ti.getId() == teamId) { infoTeam = ti; break; }
+                    }
+
+                    if (infoTeam != null) {
+                        LocalDate fineIscr = fineIscrizioniByTitolo(infoTeam.getTitoloHackathon());
+                        if (fineIscr != null && today().isAfter(fineIscr)) {
+                            guida.setForeground(new java.awt.Color(180, 26, 0));
+                            guida.setText("Iscrizioni chiuse: inviti bloccati per questo hackathon.");
+                            return;
+                        }
+                    }
+
+
                     try {
                         dao.TeamDAO tdao = new daoImpl.TeamDAOImpl();
                         boolean ok = tdao.inviaInvitoTeam(teamId, emailInvitato, utente.getMail());
@@ -1503,6 +1570,25 @@ public class Controller {
 
                     String titoloHackathon = datiTeamU.get(0);
                     String nomeTeam = datiTeamU.get(1);
+
+                    // ✅ Team definitivi: dopo fine iscrizioni non puoi creare team
+                    dao.HackathonDAO hdaoCheck = new daoImpl.HackathonDAOImpl();
+                    model.Hackathon hTmp = null;
+                    for (model.Hackathon h : hdaoCheck.findAll()) {
+                        if (h.getTitolo() != null && h.getTitolo().trim().equalsIgnoreCase(titoloHackathon.trim())) {
+                            hTmp = h;
+                            break;
+                        }
+                    }
+                    if (hTmp != null) {
+                        LocalDate fineIscr = parseLocalDateFlex(hTmp.getFineIscrizioni());
+                        if (fineIscr != null && today().isAfter(fineIscr)) {
+                            guida.setForeground(new java.awt.Color(180, 26, 0));
+                            guida.setText("Iscrizioni chiuse: non puoi creare team.");
+                            return;
+                        }
+                    }
+
 
                     try {
                         dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
@@ -3000,9 +3086,9 @@ public class Controller {
                             "Inserisci il n° max di partecipanti.",
                             "Inserisci la grandezza max del team.",
                             "Inserisci la data di inizio (GG/MM/AAAA).",
-                            "Data inizio iscrizioni (GG/MM/AAAA).",
-                            "Data fine iscrizioni (GG/MM/AAAA)."
+                            "Data inizio iscrizioni (GG/MM/AAAA)."
                     };
+
                     if (passoCreazione < domandeCrea.length) {
                         labelInput.setText(domandeCrea[passoCreazione]);
                     }
@@ -3101,18 +3187,21 @@ public class Controller {
                     }
 
                     // === Flusso CREAZIONE HACKATHON (esistente, NON toccare) ===
-                    if (passoCreazione == 7) {
+                    if (passoCreazione == 6) {
                         String titolo = datiHackaton.get(0);
                         String sede = datiHackaton.get(1);
                         int maxPartecipanti = Integer.parseInt(datiHackaton.get(2));
                         int maxTeamSize = Integer.parseInt(datiHackaton.get(3));
                         String dataInizio = datiHackaton.get(4);
                         String inizioIscr = datiHackaton.get(5);
-                        String fineIscr = datiHackaton.get(6);
+
+                        // fine iscrizioni = 2 giorni prima dell'inizio hackathon
+                        LocalDate inizioHack = parseLocalDateFlex(dataInizio);
+                        String fineIscr = formatDMY(inizioHack.minusDays(2));
 
                         Hackathon h = new Hackathon(titolo, sede, organizzatore, maxPartecipanti, maxTeamSize, dataInizio, inizioIscr, fineIscr);
                         HackathonDAO dao = new HackathonDAOImpl();
-                        dao.creaHackathon(h);  // salvataggio nel model/DAO
+                        dao.creaHackathon(h);
                         listaHackathon.add(h);
 
                         JOptionPane.showMessageDialog(frame2, "Hackathon creato con successo!");
@@ -3121,6 +3210,7 @@ public class Controller {
                         dashboardOrganizzatore.getPannelloLogico().setVisible(false);
                         dashboardOrganizzatore.getMessaggioErroreOrg().setText("");
                     }
+
                 }
             });
 
@@ -3206,11 +3296,12 @@ public class Controller {
                     }
 
 // ✅ nuovo check formato data con java.time
-                    if ((passoCreazione == 4 || passoCreazione == 5 || passoCreazione == 6) && !isDateValidFlex(inputUtente)) {
+                    if ((passoCreazione == 4 || passoCreazione == 5) && !isDateValidFlex(inputUtente)) {
                         dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
                         dashboardOrganizzatore.getMessaggioErroreOrg().setText("Formato data non valido. Usa GG/MM/AAAA.");
                         return;
                     }
+
 
 // ✅ nuove regole con LocalDate (niente ParseException qui)
                     if (passoCreazione == 4) {
@@ -3243,25 +3334,9 @@ public class Controller {
                         }
                     }
 
-                    if (passoCreazione == 6) {
 
-                        LocalDate dataFineIscr = parseLocalDateFlex(inputUtente);
-                        LocalDate dataInizioIscr = parseLocalDateFlex(datiHackaton.get(5));
-                        LocalDate dataInizioHackathon = parseLocalDateFlex(datiHackaton.get(4));
 
-                        if (!dataFineIscr.isAfter(dataInizioIscr)) {
-                            dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                            dashboardOrganizzatore.getMessaggioErroreOrg().setText("La fine iscrizioni deve essere successiva all'inizio iscrizioni.");
-                            return;
-                        }
-                        if (!dataFineIscr.isBefore(dataInizioHackathon)) {
-                            dashboardOrganizzatore.getMessaggioErroreOrg().setForeground(new Color(180, 26, 0));
-                            dashboardOrganizzatore.getMessaggioErroreOrg().setText("Le iscrizioni devono chiudersi prima dell'inizio dell'hackathon.");
-                            return;
-                        }
-                    }
 
-// (il resto del tuo codice rimane uguale: salvataggio del dato, passoCreazione++, ecc.)
 
 
                     datiHackaton.add(inputUtente);
@@ -3462,13 +3537,7 @@ public class Controller {
     }
 
 
-    private Date getOggiSenzaOrario() {
-        LocalDate ld = today();
-        return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    }
-
-
-
+    
     private void gestisciPannelloLogicoDashboardOrganizzatore() {
                 JLabel labelIstruzioni = dashboardOrganizzatore.getAreaDiTesto();
                 JLabel labelInput = dashboardOrganizzatore.getMessaggioErroreOrg();
@@ -3485,14 +3554,30 @@ public class Controller {
                 inputField.requestFocusInWindow();
 
                 String[] etichetteCampi = {"Titolo:", "Sede:", "Max Partecipanti:", "Max Grandezza Team:", "Data Inizio:", "Inizio Iscrizioni:", "Fine Iscrizioni:"};
-                String[] domande = {"Inserisci il titolo.", "Inserisci la sede.", "Inserisci il n° max di partecipanti.", "Inserisci la grandezza max del team.", "Inserisci la data di inizio (GG/MM/AAAA).", "Data inizio iscrizioni (GG/MM/AAAA).", "Data fine iscrizioni (GG/MM/AAAA)."};
+                String[] domande = {
+                "Inserisci il titolo.",
+                "Inserisci la sede.",
+                "Inserisci il n° max di partecipanti.",
+                "Inserisci la grandezza max del team.",
+                "Inserisci la data di inizio (GG/MM/AAAA).",
+                "Data inizio iscrizioni (GG/MM/AAAA)."
+        };
 
                 String formText = "<html>Creazione Hackathon<br><br>";
                 for (int i = 0; i < etichetteCampi.length; i++) {
                     formText += etichetteCampi[i] + " ";
                     if (i < datiHackaton.size()) {
                         formText += datiHackaton.get(i);
+                    } else {
+                        // Mostra fine iscrizioni calcolata (se abbiamo già la data inizio hackathon)
+                        if (i == 6 && datiHackaton.size() >= 5) {
+                            LocalDate inizioHack = parseLocalDateFlex(datiHackaton.get(4));
+                            if (inizioHack != null) {
+                                formText += formatDMY(inizioHack.minusDays(2));
+                            }
+                        }
                     }
+
                     formText += "<br>";
                 }
                 formText += "</html>";
@@ -3700,6 +3785,20 @@ public class Controller {
 
         passoClassificaG = -1;
         datiClassificaG.clear();
+    }
+
+
+    private LocalDate fineIscrizioniByTitolo(String titoloHackathon) {
+        if (titoloHackathon == null) return null;
+        String t = titoloHackathon.trim();
+
+        dao.HackathonDAO hdao = new daoImpl.HackathonDAOImpl();
+        for (model.Hackathon h : hdao.findAll()) {
+            if (h.getTitolo() != null && h.getTitolo().trim().equalsIgnoreCase(t)) {
+                return parseLocalDateFlex(h.getFineIscrizioni());
+            }
+        }
+        return null;
     }
 
 
