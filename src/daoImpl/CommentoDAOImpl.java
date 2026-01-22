@@ -8,7 +8,33 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implementazione PostgreSQL del {@link dao.CommentoDAO}.
+ * <p>
+ * Gestisce i commenti dei giudici sui team durante un hackathon.
+ * I commenti vengono salvati e poi recuperati ordinati per data.
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see dao.CommentoDAO
+ * @see model.CommentoInfo
+ * @see database.Database#getConnection()
+ */
+
+
 public class CommentoDAOImpl implements CommentoDAO {
+
+
+    /**
+     * Recupera tutti i commenti inseriti per un team in un hackathon.
+     * <p>
+     * I risultati sono ordinati per data di commento (dal più vecchio al più recente).
+     *
+     * @param hackathonId id dell'hackathon
+     * @param teamId id del team
+     * @return lista di {@link model.CommentoInfo} (vuota se non ci sono commenti)
+     * @throws RuntimeException se c'è un errore SQL durante la query
+     */
 
     @Override
     public List<CommentoInfo> findCommentiPerTeam(long hackathonId, long teamId) {
@@ -41,6 +67,20 @@ public class CommentoDAOImpl implements CommentoDAO {
 
         return result;
     }
+
+    /**
+     * Salva un commento di un giudice per un team in un hackathon.
+     * <p>
+     * In questa implementazione, prima assicuro l'esistenza della tabella {@code commento}
+     * con un CREATE TABLE IF NOT EXISTS, poi inserisco il record con data corrente (NOW()).
+     *
+     * @param hackathonId id dell'hackathon
+     * @param teamId id del team
+     * @param giudiceEmail email del giudice che commenta
+     * @param contenuto testo del commento
+     * @throws RuntimeException se fallisce la creazione tabella o l'inserimento
+     */
+
     @Override
     public void salvaCommento(long hackathonId, long teamId, String giudiceEmail, String contenuto) {
 

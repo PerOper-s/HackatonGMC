@@ -6,7 +6,32 @@ import database.Database;
 import java.sql.*;
 import java.time.LocalDate;
 
+
+/**
+ * Implementazione PostgreSQL del {@link dao.IscrizioneDAO}.
+ * <p>
+ * Gestisce le iscrizioni degli utenti agli hackathon: verifica iscrizione, conteggio iscritti,
+ * inserimento nuova iscrizione con data.
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see dao.IscrizioneDAO
+ * @see java.time.LocalDate
+ * @see database.Database#getConnection()
+ */
+
+
 public class IscrizioneDAOImpl implements IscrizioneDAO {
+
+
+    /**
+     * Controlla se un utente risulta iscritto ad un hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param emailUtente email dell'utente
+     * @return true se l'iscrizione esiste, false altrimenti
+     * @throws RuntimeException se c'è un errore SQL durante la query
+     */
 
     @Override
     public boolean isIscritto(long hackathonId, String emailUtente) {
@@ -23,6 +48,15 @@ public class IscrizioneDAOImpl implements IscrizioneDAO {
         }
     }
 
+
+    /**
+     * Conta quanti utenti sono iscritti ad un hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @return numero iscritti (0 se nessuno)
+     * @throws RuntimeException se c'è un errore SQL durante la query
+     */
+
     @Override
     public int countIscritti(long hackathonId) {
         String sql = "SELECT COUNT(*) FROM iscrizione WHERE hackathon_id = ?";
@@ -37,6 +71,16 @@ public class IscrizioneDAOImpl implements IscrizioneDAO {
             throw new RuntimeException("Errore countIscritti", e);
         }
     }
+
+
+    /**
+     * Inserisce una nuova iscrizione di un utente ad un hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param emailUtente email dell'utente
+     * @param dataIscrizione data in cui avviene l'iscrizione
+     * @throws RuntimeException se c'è un errore SQL durante l'inserimento
+     */
 
     @Override
     public void iscrivi(long hackathonId, String emailUtente, LocalDate dataIscrizione) {

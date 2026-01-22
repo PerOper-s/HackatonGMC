@@ -5,7 +5,29 @@ import database.Database;
 
 import java.sql.*;
 
+/**
+ * Implementazione PostgreSQL del {@link dao.VotoDAO}.
+ * <p>
+ * Gestisce salvataggio voti (0..10) e conteggi utili (inseriti/attesi) per la classifica.
+ * In questo file c'è anche un metodo che assicura l'esistenza delle tabelle necessarie.
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see dao.VotoDAO
+ * @see dao.ClassificaDAO
+ */
+
 public class VotoDAOImpl implements VotoDAO {
+
+
+    /**
+     * Crea le tabelle necessarie ai voti se non esistono già.
+     * <p>
+     * Serve per rendere il progetto più “robusto” in locale, ma in consegna può essere anche sostituito
+     * da uno script SQL esterno (dipende da come preferite gestire il DB).
+     *
+     * @throws RuntimeException se non riesce a creare/validare lo schema
+     */
 
     private void ensureSchema() {
         final String ddlVoto = """
@@ -33,6 +55,20 @@ public class VotoDAOImpl implements VotoDAO {
             throw new RuntimeException("Errore nella preparazione schema voti", e);
         }
     }
+
+
+    /**
+     * Salva (o aggiorna) il voto di un giudice per un team in un hackathon.
+     * <p>
+     * Il valore deve essere tra 0 e 10. Se per la stessa tripletta (hackathon, team, giudice)
+     * esiste già un voto, viene aggiornato.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param teamId id del team
+     * @param giudiceEmail email del giudice
+     * @param valore voto (0..10)
+     * @throws IllegalArgumentException se il valore non è nel range 0..10
+     */
 
     @Override
     public void salvaVoto(long hackathonId, long teamId, String giudiceEmail, int valore) {
@@ -63,6 +99,14 @@ public class VotoDAOImpl implements VotoDAO {
         }
     }
 
+
+    /**
+     * Conta quanti voti risultano attualmente inseriti per un hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @return numero voti inseriti
+     */
+
     @Override
     public int countVotiInseriti(long hackathonId) {
         ensureSchema();
@@ -81,6 +125,16 @@ public class VotoDAOImpl implements VotoDAO {
             throw new RuntimeException("Errore conteggio voti inseriti", e);
         }
     }
+
+    /**
+     * Calcola quanti voti sono attesi per un hackathon.
+     * <p>
+     * In pratica: numero giudici assegnati * numero team.
+     *
+     * @param hackathonId id dell'hackathon
+     * @return numero voti attesi
+     */
+
 
     @Override
     public int countVotiAttesi(long hackathonId) {
@@ -114,6 +168,15 @@ public class VotoDAOImpl implements VotoDAO {
         if (attesi > Integer.MAX_VALUE) return Integer.MAX_VALUE;
         return (int) attesi;
     }
+
+    /**
+     * Dice se per un hackathon sono stati inseriti tutti i voti attesi.
+     *
+     * @param hackathonId id dell'hackathon
+     * @return true se inseriti == attesi, false altrimenti
+     * @see #countVotiInseriti(long)
+     * @see #countVotiAttesi(long)
+     */
 
     @Override
     public boolean votiCompleti(long hackathonId) {

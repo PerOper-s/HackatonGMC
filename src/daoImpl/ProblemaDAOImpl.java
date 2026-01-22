@@ -7,7 +7,30 @@ import model.Problema;
 
 import java.sql.*;
 
+
+/**
+ * Implementazione PostgreSQL del {@link dao.ProblemaDAO}.
+ * <p>
+ * Gestisce i problemi pubblicati dai giudici per un hackathon.
+ * La dashboard mostra i problemi in lista (es. "Problema 1) ... giudice: email").
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see dao.ProblemaDAO
+ * @see model.Problema
+ * @see database.Database#getConnection()
+ */
+
 public class ProblemaDAOImpl implements ProblemaDAO {
+
+
+    /**
+     * Recupera un problema associato ad un hackathon (se presente).
+     *
+     * @param hackathonId id dell'hackathon
+     * @return problema trovato, oppure {@code null} se non ci sono problemi
+     * @throws RuntimeException se c'è un errore SQL durante la query
+     */
 
     @Override
     public Problema trovaPerHackathon(long hackathonId) {
@@ -41,6 +64,17 @@ public class ProblemaDAOImpl implements ProblemaDAO {
 
         return null; // nessun problema pubblicato
     }
+
+
+    /**
+     * Salva un nuovo problema pubblicato da un giudice per un hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param giudiceEmail email del giudice che pubblica
+     * @param descrizione testo/descrizione del problema
+     * @throws RuntimeException se c'è un errore SQL durante l'inserimento
+     */
+
     @Override
     public void pubblicaProblema(long hackathonId, String giudiceEmail, String descrizione) {
         final String ddl = """
@@ -73,6 +107,17 @@ public class ProblemaDAOImpl implements ProblemaDAO {
             throw new RuntimeException("Errore pubblicazione problema", e);
         }
     }
+
+
+    /**
+     * Recupera tutti i problemi pubblicati per un hackathon.
+     * <p>
+     * Utile per mostrare "Problema 1, Problema 2, ..." in UI.
+     *
+     * @param hackathonId id dell'hackathon
+     * @return lista problemi (vuota se non ce ne sono)
+     * @throws RuntimeException se c'è un errore SQL durante la query
+     */
 
     @Override
     public java.util.List<Problema> trovaTuttiPerHackathon(long hackathonId) {

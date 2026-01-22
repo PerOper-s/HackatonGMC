@@ -10,8 +10,35 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Implementazione PostgreSQL del {@link dao.ClassificaDAO}.
+ * <p>
+ * Calcola la classifica dei team di un hackathon sommando i voti dei giudici.
+ * In questa versione il punteggio totale è la <b>somma</b> (non la media).
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see dao.ClassificaDAO
+ * @see model.Classifica
+ * @see database.Database#getConnection()
+ */
+
 public class ClassificaDAOImpl implements ClassificaDAO {
 
+
+
+    /**
+     * Restituisce la classifica dei team per un hackathon.
+     * <p>
+     * La query prende tutti i team dell'hackathon e fa LEFT JOIN sui voti:
+     * così anche i team senza voti compaiono con punteggio 0.
+     * Il risultato è ordinato per punteggio decrescente e poi per nome team.
+     *
+     * @param hackathonId id dell'hackathon
+     * @return lista di righe classifica (team + punteggio totale), già ordinata
+     * @throws RuntimeException se c'è un errore SQL durante il recupero
+     */
 
     @Override
     public List<Classifica> findClassificaByHackathon(long hackathonId) {

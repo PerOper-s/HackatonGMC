@@ -10,9 +10,30 @@ import model.InvitoTeamInfo;
 
 import java.sql.*;
 
+/**
+ * Implementazione PostgreSQL del {@link dao.TeamDAO}.
+ * <p>
+ * Gestisce la parte "team" del sistema: creazione team, membri, ricerca team e inviti ai team.
+ * Tutte le query passano da JDBC usando {@link database.Database#getConnection()}.
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see dao.TeamDAO
+ * @see model.TeamInfo
+ * @see model.InvitoTeamInfo
+ */
+
 public class TeamDAOImpl implements TeamDAO {
 
     @Override
+    /**
+     * Controlla se un utente risulta già membro di un team in un dato hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param emailUtente email dell'utente
+     * @return true se è già in un team di quell'hackathon, false altrimenti
+     */
+
     public boolean utenteHaTeam(long hackathonId, String emailUtente) {
         String sql = """
             SELECT 1
@@ -34,6 +55,15 @@ public class TeamDAOImpl implements TeamDAO {
         }
     }
 
+
+    /**
+     * Verifica se esiste già un team con lo stesso nome nello stesso hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param nomeTeam nome del team
+     * @return true se esiste già, false altrimenti
+     */
+
     @Override
     public boolean esisteTeamConNome(long hackathonId, String nomeTeam) {
         String sql = "SELECT 1 FROM team WHERE hackathon_id = ? AND nome = ? LIMIT 1";
@@ -49,6 +79,16 @@ public class TeamDAOImpl implements TeamDAO {
             return false;
         }
     }
+
+
+    /**
+     * Crea un team e registra il creatore come membro del team.
+     *
+     * @param nomeTeam nome del team
+     * @param hackathonId id dell'hackathon
+     * @param creatoreEmail email dell'utente che crea il team
+     * @return id del team creato nel DB (generato automaticamente)
+     */
 
     @Override
     public long creaTeam(String nomeTeam, long hackathonId, String creatoreEmail) {
@@ -81,6 +121,15 @@ public class TeamDAOImpl implements TeamDAO {
         }
         throw new RuntimeException("Impossibile creare il team");
     }
+
+
+    /**
+     * Restituisce i team a cui partecipa un utente (con info utili per la UI).
+     *
+     * @param emailUtente email dell'utente
+     * @return lista dei team dell'utente (vuota se non ne ha)
+     * @see model.TeamInfo
+     */
 
 
     @Override
@@ -212,6 +261,13 @@ public class TeamDAOImpl implements TeamDAO {
         return result;
     }
 
+    /**
+     * Restituisce tutti i team di un hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @return lista team dell'hackathon (vuota se non ce ne sono)
+     */
+
     @Override
     public List<TeamInfo> findTeamsByHackathon(long hackathonId) {
         String sql = """
@@ -253,6 +309,16 @@ public class TeamDAOImpl implements TeamDAO {
 
         return result;
     }
+
+
+    /**
+     * Trova l'id di un team dato hackathon + nome team.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param nomeTeam nome del team
+     * @return id del team, oppure {@code null} se non esiste
+     */
+
     @Override
     public Long findTeamIdByNome(long hackathonId, String nomeTeam) {
         String sql = "SELECT id FROM team WHERE hackathon_id = ? AND LOWER(nome) = LOWER(?) LIMIT 1";
@@ -271,6 +337,19 @@ public class TeamDAOImpl implements TeamDAO {
             throw new RuntimeException("Errore findTeamIdByNome", e);
         }
     }
+
+
+    /**
+     * Invia un invito ad un utente per entrare in un team.
+     * <p>
+     * Questa operazione controlla i vincoli principali (duplicati, esistenza utente, capienza team, ecc.)
+     * e registra l'invito in stato "pending" (o equivalente).
+     *
+     * @param teamId id del team che invita
+     * @param invitatoEmail email dell'utente invitato
+     * @param invitanteEmail email di chi invia l'invito
+     * @return true se l'invito viene creato, false se non è possibile
+     */
 
     @Override
     public boolean inviaInvitoTeam(long teamId, String invitatoEmail, String invitanteEmail) {
@@ -347,6 +426,13 @@ public class TeamDAOImpl implements TeamDAO {
             throw new RuntimeException("Errore invio invito team", e);
         }
     }
+    /**
+     * Trova l'id del team dell'utente in uno specifico hackathon.
+     *
+     * @param hackathonId id dell'hackathon
+     * @param emailUtente email dell'utente
+     * @return id del team dell'utente, oppure {@code null} se non ne ha uno
+     */
 
     @Override
     public Long findMyTeamId(long hackathonId, String emailUtente) {
@@ -373,6 +459,12 @@ public class TeamDAOImpl implements TeamDAO {
             throw new RuntimeException("Errore findMyTeamId", e);
         }
     }
+    /**
+     * Restituisce le email degli utenti invitati da un team (inviti inviati).
+     *
+     * @param teamId id del team
+     * @return lista email invitate (vuota se non ce ne sono)
+     */
 
     @Override
     public List<String> findInvitiInviati(long teamId) {
@@ -400,8 +492,17 @@ public class TeamDAOImpl implements TeamDAO {
         return out;
     }
 
+
+    /**
+     * Restituisce la lista degli inviti ricevuti da un utente.
+     *
+     * @param invitatoEmail email dell'utente invitato
+     * @return lista inviti ricevuti (vuota se nessuno)
+     * @see model.InvitoTeamInfo
+     */
+
     @Override
-    public List<model.InvitoTeamInfo> findInvitiRicevuti(String invitatoEmail) {
+    public List<InvitoTeamInfo> findInvitiRicevuti(String invitatoEmail) {
         String sql = """
         SELECT ti.id,
                ti.team_id,
@@ -443,6 +544,15 @@ public class TeamDAOImpl implements TeamDAO {
 
         return out;
     }
+    /**
+     * Accetta un invito ad un team e inserisce l'utente tra i membri del team.
+     * <p>
+     * Se l'invito non esiste, non è più valido o è già stato gestito, ritorna false.
+     *
+     * @param invitoId id dell'invito
+     * @param invitatoEmail email dell'utente che accetta
+     * @return true se accettazione riuscita, false altrimenti
+     */
 
     @Override
     public boolean accettaInvitoTeam(long invitoId, String invitatoEmail) {

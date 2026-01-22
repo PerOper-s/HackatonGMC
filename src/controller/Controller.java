@@ -9,19 +9,45 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import dao.UtenteDAO;
 import daoImpl.UtenteDAOImpl;
 import dao.HackathonDAO;
 import daoImpl.HackathonDAOImpl;
 import java.util.List;
 import model.Hackathon;
-
-
 import model.*;
+
+
+/**
+ * Controller principale del progetto (parte "Control" del pattern BCE).
+ * <p>
+ * Qui collego la GUI Swing (login + dashboard) con la logica: quando clicco bottoni o inserisco testo,
+ * questo controller decide cosa fare e usa i DAO per parlare col database.
+ * <p>
+ * Dentro ci sono anche i "wizard" a passi (passoX + datiX): servono per guidare l'utente step-by-step
+ * con Avanti/Indietro/Conferma senza aprire 100 finestre diverse.
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see gui.Home
+ * @see gui.DashboardUtente
+ * @see gui.DashboardGiudice
+ * @see gui.DashboardOrganizzatore
+ */
 public class Controller {
 
-    // JFrame e pannelli
+    /**
+     * Riferimenti principali alla UI e stato dei wizard.
+     * <p>
+     * - frame / frame2: finestre Swing (login e dashboard).<br>
+     * - loginFrame + radioButton: componenti del login.<br>
+     * - dashboardX: schermate principali per ogni ruolo.<br>
+     * - passoX + datiX: stato dei wizard (step corrente + input raccolti).
+     *
+     * @see javax.swing.JFrame
+     * @see java.util.ArrayList
+     */
+
 
     private static JFrame frame;
     private static JFrame frame2;
@@ -56,15 +82,17 @@ public class Controller {
     private ArrayList<String> datiInvitoTeamU = new ArrayList<>();
     private int passoInvitiRicevutiU = -1;
     private ArrayList<String> datiInvitiRicevutiU = new ArrayList<>();
+    private Hackathon hackathonSelezionato;
 
 
-
-
-
-
- // Costruttore
-
-
+    /**
+     * Costruisce il Controller e apre la schermata di login.
+     * <p>
+     * Qui preparo il frame, carico la GUI di login e poi chiamo {@link #aggiungiListeners()}
+     * per attivare i bottoni (altrimenti la finestra si vede ma non “fa nulla”).
+     *
+     * @see #aggiungiListeners() #aggiungiListeners()
+     */
     public Controller () {
     frame = new JFrame("Hackaton");
     loginFrame = new Home();
@@ -90,8 +118,16 @@ public class Controller {
     }
 
 
-    // Aggiunta dei listener ai componenti della GUI di login
-
+    /**
+     * Collego tutti i listener della schermata di login.
+     * <p>
+     * - Focus sul campo email (placeholder e pulizia messaggi).<br>
+     * - Click sul bottone login: valida email/ruolo, registra se non esiste e apre la dashboard corretta.
+     *
+     * @see #gestisciDashboardUtente(model.Utente) #gestisciDashboardUtente(model.Utente)
+     * @see #gestisciDashboardGiudice(model.Giudice) #gestisciDashboardGiudice(model.Giudice)
+     * @see #gestisciDashboardOrganizzatore(model.Organizzatore) #gestisciDashboardOrganizzatore(model.Organizzatore)
+     */
     public void aggiungiListeners() {
        JTextField campoEmail = loginFrame.getEmailTextField();
        JPanel loginPanel = loginFrame.getPanel1();
@@ -187,10 +223,26 @@ public class Controller {
 
         }
 
-        // Meccanismo della dashboard utente
+    /**
+     * Gestisce la dashboard dell'utente (listener + wizard della parte utente).
+     * <p>
+     * Qui imposto la finestra dell'utente e collego i pulsanti: hackathon disponibili,
+     * i miei team, inviti team, documenti, classifica, ecc.
+     *
+     * @param utente l'utente attualmente loggato (usato per email e permessi)
+     * @see gui.DashboardUtente
+     */
 
-        private void gestisciDashboardUtente(Utente utente){
-            JLabel messaggioBenvenuto = dashboardUtente.getMessaggioBenvenuto();
+
+    private void gestisciDashboardUtente(Utente utente){
+
+        // ===== Setup iniziale Dashboard Utente =====
+// Creo e configuro la finestra (frame2) con la dashboard dell'utente.
+// Qui imposto content pane, chiusura, dimensioni, posizione e blocco resize.
+// Poi aggiorno il messaggio di benvenuto usando l'email dell'utente loggato.
+
+
+        JLabel messaggioBenvenuto = dashboardUtente.getMessaggioBenvenuto();
             frame2 = new JFrame("HackatonDashboard - Utente" );
             frame2.setContentPane(dashboardUtente.getDashboardUtente());
             frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -1903,6 +1955,21 @@ public class Controller {
 
         }
 
+    /**
+     * Gestisce la dashboard del giudice.
+     * <p>
+     * Qui imposto la finestra del giudice e collego i pulsanti principali:
+     * hackathon assegnati, pubblicazione problemi, visualizzazione documenti, commenti e inserimento voti.
+     * Tutte le operazioni lato giudice passano da questo metodo.
+     *
+     * @param giudice giudice attualmente loggato (identificato tramite email)
+     * @see gui.DashboardGiudice
+     * @see dao.ProblemaDAO
+     * @see dao.CommentoDAO
+     * @see dao.VotoDAO
+     */
+
+
     private void gestisciDashboardGiudice(Giudice giudice){
         JLabel messaggioBenvenuto = dashboardGiudice.getMessaggioBenvenuto();
         frame2 = new JFrame("HackatonDashboard - Giudice" );
@@ -3045,6 +3112,18 @@ public class Controller {
 
     }
 
+    /**
+     * Gestisce la dashboard dell'organizzatore.
+     * <p>
+     * Qui l'organizzatore può creare hackathon e invitare giudici.
+     * Gestisco anche i wizard relativi alla creazione dell'hackathon (passoCreazione/datiHackaton)
+     * e all'invito dei giudici (passoInvitoGiudice/datiInvitoGiudice).
+     *
+     * @param organizzatore organizzatore loggato (email usata per legare hackathon creati)
+     * @see gui.DashboardOrganizzatore
+     * @see dao.HackathonDAO
+     * @see dao.UtenteDAO
+     */
 
 
     private void gestisciDashboardOrganizzatore(Organizzatore organizzatore){
@@ -3510,9 +3589,32 @@ public class Controller {
     private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("d/M/uuuu");
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
 
+    /**
+     * Ritorna la data di oggi (senza orario) usando il fuso orario di sistema.
+     * Funziona in client no server
+     * Mi serve per fare controlli sulle finestre temporali (iscrizioni aperte/chiuse, ecc.).
+     *
+     * @return data di oggi come {@link java.time.LocalDate}
+     * @see java.time.ZoneId
+     */
+
+
     private LocalDate today() {
         return LocalDate.now(ZoneId.systemDefault());
     }
+
+    /**
+     * Converte una stringa data in {@link java.time.LocalDate}.
+     * <p>
+     * Accetto due formati:
+     * - dd/MM/yyyy (quello che scrive l'utente in input)
+     * - ISO yyyy-MM-dd (utile se arriva dal DB o da altre parti)
+     *
+     * @param s stringa data (es. "24/04/2026" oppure "2026-04-24")
+     * @return la data convertita, oppure {@code null} se il formato non è valido
+     * @see java.time.format.DateTimeFormatter
+     */
+
 
     private LocalDate parseLocalDateFlex(String s) {
         if (s == null) return null;
@@ -3528,16 +3630,45 @@ public class Controller {
         }
     }
 
+    /**
+     * Controlla se una stringa può essere interpretata come data valida
+     * usando {@link #parseLocalDateFlex(String)}.
+     *
+     * @param s stringa data inserita dall'utente
+     * @return true se la data è valida, false altrimenti
+     * @see #parseLocalDateFlex(String)
+     */
+
+
     private boolean isDateValidFlex(String s) {
         return parseLocalDateFlex(s) != null;
     }
+
+    /**
+     * Converte una {@link java.time.LocalDate} in stringa nel formato "dd/MM/yyyy"
+     * per mostrarla in modo leggibile nella UI.
+     *
+     * @param d data da formattare
+     * @return stringa formattata, oppure stringa vuota se {@code d} è null
+     */
+
 
     private String formatDMY(LocalDate d) {
         return d == null ? "" : d.format(DateTimeFormatter.ofPattern("dd/MM/uuuu"));
     }
 
 
-    
+    /**
+     * Aggiorna il pannello logico dell'organizzatore durante la creazione di un hackathon.
+     * <p>
+     * In base a {@code passoCreazione} mostra la domanda corretta, aggiorna il riepilogo HTML
+     * e decide quali bottoni rendere visibili (Avanti / Indietro / Crea).
+     * Qui viene anche mostrata la "fine iscrizioni" calcolata automaticamente.
+     *
+     * @see #gestisciDashboardOrganizzatore(model.Organizzatore)
+     */
+
+
     private void gestisciPannelloLogicoDashboardOrganizzatore() {
                 JLabel labelIstruzioni = dashboardOrganizzatore.getAreaDiTesto();
                 JLabel labelInput = dashboardOrganizzatore.getMessaggioErroreOrg();
@@ -3592,7 +3723,17 @@ public class Controller {
                 }
             }
 
-            
+
+    /**
+     * Aggiorna il pannello logico dell'organizzatore per l'invito dei giudici.
+     * <p>
+     * Gestisce il mini-wizard di invito giudice (step + dati raccolti) e aggiorna la guida testuale
+     * per far capire cosa inserire all'utente.
+     *
+     * @see #gestisciDashboardOrganizzatore(model.Organizzatore)
+     */
+
+
     private void gestisciPannelloLogicoInvitoGiudice() {
 
         JLabel labelIstruzioni = dashboardOrganizzatore.getAreaDiTesto();
@@ -3642,7 +3783,13 @@ public class Controller {
     }
 
 
-    // Guida testuale per la DashboardUtente, in base allo stato dei wizard
+    /**
+     * Aggiorna la scritta di guida (label) nella dashboard utente.
+     * <p>
+     * Serve soprattutto quando l'utente riclicca sul campo input dopo un errore: in base al wizard attivo
+     * (iscrizione, team, inviti, documenti, ecc.) rimetto la guida corretta dello step corrente.
+     */
+
     private void aggiornaGuidaDashboardUtente() {
         if (dashboardUtente == null) return;
 
@@ -3721,7 +3868,17 @@ public class Controller {
         guida.setText("");
     }
 
-    // Guida per la dashboard Giudice in base allo stato del wizard invito
+    /**
+     * Aggiorna la guida testuale nella dashboard giudice.
+     * <p>
+     * In base al wizard attivo (hackathon assegnati, pubblicazione problema, commenti, voti, ecc.)
+     * imposta il messaggio corretto per lo step corrente.
+     * Serve anche quando l'utente riclicca sul campo input dopo un errore: rimetto la guida “giusta”
+     * invece di lasciare l'errore rosso.
+     *
+     * @see #gestisciDashboardGiudice(model.Giudice)
+     * @see #resetWizardGiudice()
+     */
     void aggiornaGuidaDashboardGiudice() {
         if (dashboardGiudice == null) return;
 
@@ -3773,6 +3930,14 @@ public class Controller {
         guida.setText("");
     }
 
+    /**
+     * Reset completo dei wizard lato giudice.
+     * <p>
+     * Riporto tutti i "passoX" del giudice a -1 e pulisco le liste datiX, così una funzione non interferisce
+     * con un'altra (es. voti vs commenti vs problema).
+     */
+
+
     private void resetWizardGiudice() {
         passoInvitoG = -1;
         datiInvitoG.clear();
@@ -3787,6 +3952,17 @@ public class Controller {
         datiClassificaG.clear();
     }
 
+    /**
+     * Recupera la fine iscrizioni di un hackathon dato il suo titolo.
+     * <p>
+     * Mi serve per applicare la regola "team definitivi": dopo la fine iscrizioni non si possono
+     * creare team / inviare inviti / accettare inviti.
+     *
+     * @param titoloHackathon titolo dell'hackathon (case-insensitive)
+     * @return data di fine iscrizioni, oppure {@code null} se l'hackathon non esiste o la data non è leggibile
+     * @see #today()
+     * @see #parseLocalDateFlex(String)
+     */
 
     private LocalDate fineIscrizioniByTitolo(String titoloHackathon) {
         if (titoloHackathon == null) return null;
@@ -3802,7 +3978,18 @@ public class Controller {
     }
 
 
-    // Restituisce una anteprima del documento: max 5 righe e ~300 caratteri
+    /**
+     * Crea una piccola anteprima del documento (da mostrare nella UI).
+     * <p>
+     * Taglia il contenuto a:
+     * - massimo 5 righe
+     * - circa 300 caratteri
+     * così la textArea non esplode e l’utente capisce subito di che documento si tratta.
+     *
+     * @param contenuto testo completo del documento
+     * @return anteprima del contenuto (eventualmente troncata con "...")
+     */
+
     private String anteprimaDocumento(String contenuto) {
         if (contenuto == null) return "";
         contenuto = contenuto.trim();
@@ -3844,6 +4031,15 @@ public class Controller {
 
         return sb.toString();
     }
+    /**
+     * Limita una stringa ad un massimo di caratteri, utile per non “rompere” la UI.
+     * <p>
+     * Se la stringa supera {@code max}, ritorno una versione tagliata con "..." finale.
+     *
+     * @param s stringa originale
+     * @param max massimo numero di caratteri consentiti
+     * @return stringa pronta da stampare (tagliata se necessario)
+     */
 
     private String limitaPerAreaDiTesto(String s, int max) {
         if (s == null) return "";

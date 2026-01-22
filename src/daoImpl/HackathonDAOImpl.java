@@ -13,7 +13,28 @@ import java.util.List;
 import model.Organizzatore;
 
 
+/**
+ * Implementazione PostgreSQL del {@link dao.HackathonDAO}.
+ * <p>
+ * Gestisce creazione e ricerca hackathon, più la parte di invito/accettazione giudici.
+ * Usa JDBC con {@link database.Database#getConnection()}.
+ *
+ * @author Gruppo ...
+ * @version 1.0
+ * @see dao.HackathonDAO
+ * @see model.Hackathon
+ */
+
 public class HackathonDAOImpl implements HackathonDAO {
+
+    /**
+     * Inserisce un nuovo hackathon nel database.
+     * <p>
+     * Le date arrivano come stringhe "dd/MM/yyyy" e vengono convertite in {@link java.sql.Date}.
+     *
+     * @param h hackathon da salvare
+     * @throws IllegalArgumentException se una data non è nel formato atteso (può emergere dal parsing)
+     */
 
     @Override
     public void creaHackathon(Hackathon h) {
@@ -42,6 +63,12 @@ public class HackathonDAOImpl implements HackathonDAO {
             System.err.println("Errore generico: " + e.getMessage());
         }
     }
+
+    /**
+     * Recupera tutti gli hackathon presenti nel database.
+     *
+     * @return lista degli hackathon (vuota se non ce ne sono)
+     */
 
     @Override
     public List<Hackathon> findAll() {
@@ -72,6 +99,13 @@ public class HackathonDAOImpl implements HackathonDAO {
 
         return hackathonList;
     }
+
+    /**
+     * Recupera gli hackathon creati da un certo organizzatore.
+     *
+     * @param email email dell'organizzatore
+     * @return lista hackathon creati da quell'organizzatore
+     */
 
     @Override
     public List<Hackathon> findByOrganizzatore(String email) {
@@ -105,6 +139,14 @@ public class HackathonDAOImpl implements HackathonDAO {
         return hackathonList;
     }
 
+
+    /**
+     * Registra un invito per un giudice su un hackathon.
+     *
+     * @param titoloHackathon titolo dell'hackathon
+     * @param organizzatoreEmail email dell'organizzatore che invita
+     * @param giudiceEmail email del giudice invitato
+     */
 
     @Override
     public void invitaGiudice(String titoloHackathon, String organizzatoreEmail, String giudiceEmail) {
@@ -149,7 +191,14 @@ public class HackathonDAOImpl implements HackathonDAO {
         }
     }
 
-    // === NEW: lista giudici invitati ===
+    /**
+     * Restituisce l'elenco dei giudici invitati (email) per un hackathon e un organizzatore.
+     *
+     * @param titoloHackathon titolo dell'hackathon
+     * @param organizzatoreEmail email dell'organizzatore
+     * @return lista email dei giudici invitati (vuota se nessuno)
+     */
+
     @Override
     public List<String> listaGiudiciInvitati(String titoloHackathon, String organizzatoreEmail) {
         final String sql = "SELECT giudice_email FROM invito_giudice WHERE hackathon_titolo=? AND organizzatore_email=?";
@@ -170,6 +219,14 @@ public class HackathonDAOImpl implements HackathonDAO {
 
 
 
+    /**
+     * Cerca l'id di un hackathon partendo dal titolo.
+     *
+     * @param titolo titolo dell'hackathon
+     * @return id se trovato, altrimenti {@code null}
+     */
+
+
     public Long findIdByTitolo(String titolo) {
         String sql = "SELECT id FROM hackathon WHERE titolo = ? LIMIT 1";
         try (Connection c = Database.getConnection();
@@ -185,6 +242,14 @@ public class HackathonDAOImpl implements HackathonDAO {
         }
         return null; // non trovato
     }
+
+    /**
+     * Recupera gli hackathon per cui un giudice ha ricevuto un invito.
+     *
+     * @param emailGiudice email del giudice
+     * @return lista hackathon (vuota se non ci sono inviti)
+     */
+
     @Override
     public List<Hackathon> findInvitiPerGiudice(String emailGiudice) {
         List<Hackathon> result = new ArrayList<>();
@@ -240,6 +305,17 @@ public class HackathonDAOImpl implements HackathonDAO {
 
         return result;
     }
+
+    /**
+     * Accetta l'invito del giudice per un hackathon.
+     * <p>
+     * Dopo l'accettazione, l'hackathon risulta tra quelli assegnati al giudice.
+     *
+     * @param titoloHackathon titolo dell'hackathon
+     * @param giudiceEmail email del giudice
+     * @return true se l'invito è stato accettato, false se non esiste o non è accettabile
+     */
+
     @Override
     public boolean accettaInvitoGiudice(String titoloHackathon, String giudiceEmail) {
         // tabella che associa giudici ↔ hackathon
@@ -293,6 +369,13 @@ public class HackathonDAOImpl implements HackathonDAO {
         }
     }
 
+    /**
+     * Recupera gli hackathon a cui un utente è iscritto.
+     *
+     * @param emailUtente email dell'utente
+     * @return lista hackathon a cui l'utente risulta iscritto
+     */
+
 
     @Override
     public List<Hackathon> findByUtenteIscritto(String emailUtente) {
@@ -332,6 +415,12 @@ public class HackathonDAOImpl implements HackathonDAO {
 
         return result;
     }
+    /**
+     * Recupera gli hackathon assegnati ad un giudice.
+     *
+     * @param emailGiudice email del giudice
+     * @return lista hackathon assegnati (vuota se nessuno)
+     */
 
 
     @Override
